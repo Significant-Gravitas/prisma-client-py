@@ -51,3 +51,6 @@ class _{{ type }}ListUpdatePush(TypedDict):
 ]
 
 {% endfor %}
+
+# we have to import these as python_type may reference 'fields.X' or 'enums.X'
+from .. import fields, enums

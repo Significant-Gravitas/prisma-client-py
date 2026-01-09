@@ -243,7 +243,7 @@ class {{ name }}(TypedDict, total=False):
 class {{ name }}(TypedDict, total=False):
     """Arguments for {{model.name }}"""
     {%+ if next != '' -%}
-        include: '{{ related.name }}IncludeFrom{{ related.name + iteration}}'
+        include: '{{ related.name }}IncludeFrom{{ model.name + iteration}}'
     {% endif %}
 {% endcall %}
 
@@ -257,7 +257,7 @@ class {{ name }}(TypedDict, total=False):
     cursor: '{{ related.name }}WhereUniqueInput'
     distinct: List['{{ related.name }}ScalarFieldKeys']
     {%+ if next != '' -%}
-        include: '{{ related.name }}IncludeFrom{{ related.name + iteration}}'
+        include: '{{ related.name }}IncludeFrom{{ model.name + iteration}}'
     {% endif %}
 {% endcall %}
 
