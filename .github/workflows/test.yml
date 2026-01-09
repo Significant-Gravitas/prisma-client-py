@@ -76,7 +76,7 @@ jobs:
           TARGET_PYTHON: ${{ matrix.python-version }}
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-data
           path: ".cache/.coverage.*"
@@ -347,7 +347,7 @@ jobs:
           COVERAGE_FILE: .cache/.coverage.databases
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-data
           path: ".cache/.coverage*"
@@ -381,7 +381,7 @@ jobs:
 
       - name: Upload coverage report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: htmlcov
           path: htmlcov
