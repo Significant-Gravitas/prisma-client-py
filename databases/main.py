@@ -69,7 +69,7 @@ def test(
     test: bool = True,
     coverage: bool = False,
     pydantic_v2: bool = True,
-    for_async: bool = True,  # pyright: ignore[reportCallInDefaultInitializer]
+    for_async: bool = typer.Option(default=True, is_flag=False),  # pyright: ignore[reportCallInDefaultInitializer]
 ) -> None:
     """Run unit tests and Pyright"""
     if not pydantic_v2:
@@ -118,7 +118,7 @@ def test_inverse(
     inplace: bool = False,
     pytest_args: Optional[str] = None,
     pydantic_v2: bool = True,
-    for_async: bool = True,  # pyright: ignore[reportCallInDefaultInitializer]
+    for_async: bool = typer.Option(default=True, is_flag=False),  # pyright: ignore[reportCallInDefaultInitializer]
 ) -> None:
     """Ensure unsupported features actually result in either:
 

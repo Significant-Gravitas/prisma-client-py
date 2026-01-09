@@ -12,6 +12,7 @@ from typing import (
     Mapping,
     NoReturn,
     Optional,
+    cast,
     overload,
 )
 from pathlib import Path
@@ -104,7 +105,7 @@ class EnumChoice(click.Choice[ParamTypeValue]):
         param: Optional[click.Parameter],
         ctx: Optional[click.Context],
     ) -> ParamTypeValue:
-        return self.__enum(super().convert(value, param, ctx)).value
+        return cast(ParamTypeValue, self.__enum(super().convert(value, param, ctx)).value)
 
 
 def is_module(path: Path) -> bool:
