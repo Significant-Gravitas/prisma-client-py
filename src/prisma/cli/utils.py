@@ -10,7 +10,6 @@ from typing import (
     Type,
     Union,
     Mapping,
-    TypeVar,
     NoReturn,
     Optional,
     overload,
@@ -19,9 +18,7 @@ from pathlib import Path
 from typing_extensions import override
 
 import click
-
-# ParamTypeValue is only available in click 8.2+, define our own for compatibility
-ParamTypeValue = TypeVar('ParamTypeValue')
+from click.types import ParamTypeValue
 
 from . import prisma
 from ..utils import module_exists
