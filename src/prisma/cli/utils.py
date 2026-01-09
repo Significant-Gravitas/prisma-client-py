@@ -26,7 +26,7 @@ from .._types import Literal
 log: logging.Logger = logging.getLogger(__name__)
 
 
-class PrismaCLI(click.MultiCommand):
+class PrismaCLI(click.Group):
     base_package: str = 'prisma.cli.commands'
     folder: Path = Path(__file__).parent / 'commands'
 
