@@ -2,12 +2,12 @@
 # -- template types/__init__.py.jinja --
 # This module re-exports all type definitions for backward compatibility
 
-from .filters import *  # noqa: F403
-from .atomic import *  # noqa: F403
-from .list_filters import *  # noqa: F403
+from .filters import *  # noqa: F403, TID251
+from .atomic import *  # noqa: F403, TID251
+from .list_filters import *  # noqa: F403, TID251
 
 {% for model in dmmf.datamodel.models %}
-from .{{ model.name | lower }} import *  # noqa: F403
+from .{{ model.name | lower }} import *  # noqa: F403, TID251
 {% endfor %}
 
 # Collect __all__ from submodules for proper re-export
@@ -26,4 +26,4 @@ def __getattr__(name: str) -> Any:
 
 
 # we have to import ourselves as types can be namespaced to types
-from .. import types, enums, models, fields
+from .. import types, enums, models, fields  # noqa: TID251

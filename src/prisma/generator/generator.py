@@ -291,7 +291,7 @@ class Generator(GenericGenerator[PythonData]):
 
 
 def _run_ruff_if_available(rootdir: Path) -> None:
-    """Run ruff to fix unused imports if available."""
+    """Run ruff to fix linting issues if available."""
     try:
         # Check if ruff is available
         result = subprocess.run(
@@ -300,20 +300,30 @@ def _run_ruff_if_available(rootdir: Path) -> None:
             check=False,
         )
         if result.returncode != 0:
-            log.debug('ruff not available, skipping import cleanup')
+            log.debug('ruff not available, skipping linting fixes')
             return
 
-        # Run ruff to fix unused imports (F401) in the types directory
+        # Run ruff to fix various issues in the types directory:
+        # - F401: unused imports
+        # - I001: import sorting
+        # - E501: line too long (ruff format handles this)
         types_dir = rootdir / 'types'
         if types_dir.exists():
+            # First run ruff check --fix for auto-fixable lint issues
             subprocess.run(
-                ['ruff', 'check', '--select', 'F401', '--fix', str(types_dir)],
+                ['ruff', 'check', '--select', 'F401,I001', '--fix', str(types_dir)],
                 capture_output=True,
                 check=False,
             )
-            log.debug('Ran ruff to clean up unused imports in %s', types_dir)
+            # Then run ruff format to fix line length and formatting
+            subprocess.run(
+                ['ruff', 'format', str(types_dir)],
+                capture_output=True,
+                check=False,
+            )
+            log.debug('Ran ruff to fix linting issues in %s', types_dir)
     except FileNotFoundError:
-        log.debug('ruff not found, skipping import cleanup')
+        log.debug('ruff not found, skipping linting fixes')
     except Exception as e:
         log.debug('Failed to run ruff: %s', e)
 

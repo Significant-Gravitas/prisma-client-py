@@ -4,15 +4,15 @@
 # Types for model: {{ model.name }}
 
 from ..utils import _NoneType
-from .filters import *
-from .atomic import *
-from .list_filters import *
+from .filters import *  # noqa: TID251
+from .atomic import *  # noqa: TID251
+from .list_filters import *  # noqa: TID251
 
 # Cross-import related model types for type checker resolution
 if TYPE_CHECKING:
 {% for other_model in all_models %}
 {% if other_model.name != model.name %}
-    from .{{ other_model.name | lower }} import (
+    from .{{ other_model.name | lower }} import (  # noqa: TID251
         {{ other_model.name }}WhereInput,
         {{ other_model.name }}WhereUniqueInput,
         {{ other_model.name }}OrderByInput,
@@ -272,7 +272,6 @@ class {{ name }}(TypedDict, total=False):
         include: '{{ related.name }}IncludeFrom{{ model.name + iteration}}'
     {% endif %}
 {% endcall %}
-
 {% endfor %}
 
 
@@ -429,4 +428,4 @@ class {{ model.name }}NumberAggregateInput(TypedDict, total=False):
 
 
 # we have to import ourselves as forward references may use 'types.XFilter' syntax
-from .. import types, enums, fields
+from .. import types, enums, fields  # noqa: TID251
