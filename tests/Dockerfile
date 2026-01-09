@@ -1,8 +1,8 @@
 # NOTE: This dockerfile should only be used for internal testing purposes
 # and should not form the basis of an official image pushed out
 # to a registry
-ARG PYTHON_VERSION=3.10
-ARG OS_DISTRO=slim-bullseye
+ARG PYTHON_VERSION=3.12
+ARG OS_DISTRO=slim-bookworm
 
 FROM python:${PYTHON_VERSION}-${OS_DISTRO}
 
@@ -41,7 +41,8 @@ RUN \
       apt-get install -y --no-install-recommends \
         git \
         ca-certificates \
-        apt-transport-https; \
+        apt-transport-https \
+        libatomic1; \
       # Cleanup to reduce image size
       apt-get clean; \
       rm -rf /var/lib/apt/lists/*; \
@@ -68,7 +69,7 @@ RUN prisma -v
 RUN prisma generate --schema ./tests/data/schema.prisma
 
 # Ensure all combinations of non-global Node resolvers work
-RUN nox -s test -p 3.10 -- tests/test_node
+RUN nox -s test -p 3.12 -- tests/test_node
 
 # Ensure database access using SQLite works
 ENV SQLITE_URL="file:sqlite.db"
