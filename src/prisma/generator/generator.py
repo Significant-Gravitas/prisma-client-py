@@ -3,6 +3,7 @@ import sys
 import json
 import shutil
 import logging
+import subprocess
 import traceback
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Type, Generic, Optional, cast
@@ -283,7 +284,38 @@ class Generator(GenericGenerator[PythonData]):
             cleanup_templates(rootdir, env=DEFAULT_ENV)
             raise
 
+        # Optionally run ruff to clean up unused imports
+        _run_ruff_if_available(rootdir)
+
         log.debug('Finished generating Prisma Client Python')
+
+
+def _run_ruff_if_available(rootdir: Path) -> None:
+    """Run ruff to fix unused imports if available."""
+    try:
+        # Check if ruff is available
+        result = subprocess.run(
+            ['ruff', '--version'],
+            capture_output=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            log.debug('ruff not available, skipping import cleanup')
+            return
+
+        # Run ruff to fix unused imports (F401) in the types directory
+        types_dir = rootdir / 'types'
+        if types_dir.exists():
+            subprocess.run(
+                ['ruff', 'check', '--select', 'F401', '--fix', str(types_dir)],
+                capture_output=True,
+                check=False,
+            )
+            log.debug('Ran ruff to clean up unused imports in %s', types_dir)
+    except FileNotFoundError:
+        log.debug('ruff not found, skipping import cleanup')
+    except Exception as e:
+        log.debug('Failed to run ruff: %s', e)
 
 
 def cleanup_templates(rootdir: Path, *, env: Optional[Environment] = None) -> None:

@@ -2,18 +2,30 @@
 {% from '_utils.py.jinja' import recursive_types with context %}
 # -- template types/_model.py.jinja --
 # Types for model: {{ model.name }}
-from typing import TypeVar
 
 from ..utils import _NoneType
 from .filters import *
 from .atomic import *
 from .list_filters import *
 
-# Cross-import all model type files for type checker resolution of forward references
+# Cross-import related model types for type checker resolution
 if TYPE_CHECKING:
 {% for other_model in all_models %}
 {% if other_model.name != model.name %}
-    from .{{ other_model.name | lower }} import *  # noqa: F403
+    from .{{ other_model.name | lower }} import (
+        {{ other_model.name }}WhereInput,
+        {{ other_model.name }}WhereUniqueInput,
+        {{ other_model.name }}OrderByInput,
+        {{ other_model.name }}ScalarFieldKeys,
+        {{ other_model.name }}RelationFilter,
+        {{ other_model.name }}ListRelationFilter,
+        {{ other_model.name }}CreateWithoutRelationsInput,
+        {{ other_model.name }}CreateNestedWithoutRelationsInput,
+        {{ other_model.name }}CreateManyNestedWithoutRelationsInput,
+        {{ other_model.name }}UpdateOneWithoutRelationsInput,
+        {{ other_model.name }}UpdateManyWithoutRelationsInput,
+        {{ other_model.name }}ConnectOrCreateWithoutRelationsInput,
+    )
 {% endif %}
 {% endfor %}
 
