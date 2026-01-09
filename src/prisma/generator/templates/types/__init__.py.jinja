@@ -1,0 +1,29 @@
+{% include '_header.py.jinja' %}
+# -- template types/__init__.py.jinja --
+# This module re-exports all type definitions for backward compatibility
+
+from .filters import *  # noqa: F403
+from .atomic import *  # noqa: F403
+from .list_filters import *  # noqa: F403
+
+{% for model in dmmf.datamodel.models %}
+from .{{ model.name | lower }} import *  # noqa: F403
+{% endfor %}
+
+# Collect __all__ from submodules for proper re-export
+def __getattr__(name: str) -> Any:
+    """Allow attribute access to types defined in submodules."""
+    # Try each submodule
+    import importlib
+    for module_name in ['filters', 'atomic', 'list_filters'{% for model in dmmf.datamodel.models %}, '{{ model.name | lower }}'{% endfor %}]:
+        try:
+            module = importlib.import_module(f'.{module_name}', __package__)
+            if hasattr(module, name):
+                return getattr(module, name)
+        except (ImportError, AttributeError):
+            continue
+    raise AttributeError(f"module 'prisma.types' has no attribute {name!r}")
+
+
+# we have to import ourselves as types can be namespaced to types
+from .. import types, enums, models, fields

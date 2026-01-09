@@ -58,7 +58,7 @@ def _clean_line(proc: 'subprocess.CompletedProcess[bytes]') -> str:
 
 
 def get_files_from_templates(directory: Path) -> List[str]:
-    """Return a list of all auto-generated python modules"""
+    """Return a list of all auto-generated python modules from templates"""
     files: List[str] = []
 
     for template in directory.iterdir():
@@ -75,9 +75,25 @@ def get_files_from_templates(directory: Path) -> List[str]:
     return files
 
 
+def get_generated_type_files(output_dir: Path) -> List[str]:
+    """Return a list of dynamically generated type files from the types/ directory"""
+    types_dir = output_dir / 'types'
+    if not types_dir.exists():
+        return []
+
+    files: List[str] = []
+    for file in types_dir.iterdir():
+        if file.is_file() and file.suffix == '.py' and not file.name.startswith('_'):
+            # Include files like user.py, post.py but not __init__.py (already from template)
+            if file.name != '__init__.py':
+                files.append(f'types/{file.name}')
+    return sorted(files)
+
+
 SYNC_ROOTDIR = ROOTDIR / '__prisma_sync_output__' / 'prisma'
 ASYNC_ROOTDIR = ROOTDIR / '__prisma_async_output__' / 'prisma'
-FILES = [
+# Static files from templates
+TEMPLATE_FILES = [
     *get_files_from_templates(BASE_PACKAGE_DIR / 'generator' / 'templates'),
     'schema.prisma',
 ]
@@ -105,22 +121,51 @@ def path_replacer(
 # TODO: support running snapshot tests on windows
 
 
+def get_all_generated_files(output_dir: Path) -> List[str]:
+    """Get all files to test including dynamically generated type files"""
+    files = list(TEMPLATE_FILES)  # Copy the static list
+    files.extend(get_generated_type_files(output_dir))
+    return files
+
+
 @skipif_windows
-@pytest.mark.parametrize('file', FILES)
+@pytest.mark.parametrize('file', TEMPLATE_FILES)
 def test_sync(snapshot: SnapshotAssertion, file: str) -> None:
-    """Ensure synchronous client files match"""
+    """Ensure synchronous client files from templates match"""
     assert SYNC_ROOTDIR.joinpath(file).absolute().read_text() == snapshot(
         matcher=path_replacer(THIS_DIR / 'sync.schema.prisma')  # type: ignore
     )
 
 
 @skipif_windows
-@pytest.mark.parametrize('file', FILES)
+@pytest.mark.parametrize('file', TEMPLATE_FILES)
 def test_async(snapshot: SnapshotAssertion, file: str) -> None:
-    """Ensure asynchronous client files match"""
+    """Ensure asynchronous client files from templates match"""
     assert ASYNC_ROOTDIR.joinpath(file).absolute().read_text() == snapshot(
         matcher=path_replacer(THIS_DIR / 'async.schema.prisma')  # type: ignore
     )
+
+
+@skipif_windows
+def test_sync_model_types(snapshot: SnapshotAssertion) -> None:
+    """Ensure synchronous client dynamically generated model type files match"""
+    model_files = get_generated_type_files(SYNC_ROOTDIR)
+    for file in model_files:
+        assert SYNC_ROOTDIR.joinpath(file).absolute().read_text() == snapshot(
+            name=f'test_sync[{file}]',
+            matcher=path_replacer(THIS_DIR / 'sync.schema.prisma'),  # type: ignore
+        )
+
+
+@skipif_windows
+def test_async_model_types(snapshot: SnapshotAssertion) -> None:
+    """Ensure asynchronous client dynamically generated model type files match"""
+    model_files = get_generated_type_files(ASYNC_ROOTDIR)
+    for file in model_files:
+        assert ASYNC_ROOTDIR.joinpath(file).absolute().read_text() == snapshot(
+            name=f'test_async[{file}]',
+            matcher=path_replacer(THIS_DIR / 'async.schema.prisma'),  # type: ignore
+        )
 
 
 def test_sync_client_can_be_imported() -> None:

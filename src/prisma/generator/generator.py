@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import shutil
 import logging
 import traceback
 from abc import ABC, abstractmethod
@@ -44,6 +45,16 @@ GENERIC_GENERATOR_NAME = 'prisma.generator.generator.GenericGenerator'
 
 # set of templates that should be rendered after every other template
 DEFERRED_TEMPLATES = {'partials.py.jinja'}
+
+# templates that require special handling (not rendered in the normal loop)
+# All types/ templates are handled by _render_model_types to ensure proper cleanup
+SPECIAL_TEMPLATES = {
+    'types/_model.py.jinja',
+    'types/__init__.py.jinja',
+    'types/filters.py.jinja',
+    'types/atomic.py.jinja',
+    'types/list_filters.py.jinja',
+}
 
 DEFAULT_ENV = Environment(
     trim_blocks=True,
@@ -247,7 +258,19 @@ class Generator(GenericGenerator[PythonData]):
                 if not name.endswith('.py.jinja') or name.startswith('_') or name in DEFERRED_TEMPLATES:
                     continue
 
+                # Skip templates that require special handling
+                if name in SPECIAL_TEMPLATES:
+                    continue
+
+                # Skip templates in subdirectories that start with _ (e.g., types/_model.py.jinja)
+                parts = name.split('/')
+                if len(parts) > 1 and parts[-1].startswith('_'):
+                    continue
+
                 render_template(rootdir, name, params)
+
+            # Generate per-model type files
+            _render_model_types(rootdir, data, params)
 
             if config.partial_type_generator:
                 log.debug('Generating partial types')
@@ -273,6 +296,56 @@ def cleanup_templates(rootdir: Path, *, env: Optional[Environment] = None) -> No
         if file.exists():
             log.debug('Removing rendered template at %s', file)
             file.unlink()
+
+    # Also clean up dynamically generated model type files
+    types_dir = rootdir / 'types'
+    if types_dir.exists():
+        for file in types_dir.glob('*.py'):
+            # Don't remove __init__.py as it's generated from a template
+            if file.name != '__init__.py':
+                log.debug('Removing generated model types at %s', file)
+                file.unlink()
+
+
+def _render_model_types(rootdir: Path, data: PythonData, params: Dict[str, Any]) -> None:
+    """Render all type files in the types/ directory."""
+    types_dir = rootdir / 'types'
+
+    # Remove any existing types/ directory before generating
+    # This prevents stale files from a previous schema from persisting
+    if types_dir.exists():
+        shutil.rmtree(types_dir)
+        log.debug('Removed existing types directory at %s', types_dir)
+
+    types_dir.mkdir(parents=True, exist_ok=True)
+
+    # Render static type templates (filters, atomic, list_filters)
+    for template_name in ('types/filters.py.jinja', 'types/atomic.py.jinja', 'types/list_filters.py.jinja'):
+        render_template(rootdir, template_name, params)
+
+    # Get the model template
+    model_template = DEFAULT_ENV.get_template('types/_model.py.jinja')
+
+    # Get all models for cross-references
+    all_models = data.dmmf.datamodel.models
+
+    # Render a file for each model
+    for model in all_models:
+        model_schema = params['type_schema'].get_model(model.name)
+        model_params = {
+            **params,
+            'model': model,
+            'model_schema': model_schema,
+            'all_models': all_models,
+        }
+
+        output = model_template.render(**model_params)
+        file = types_dir / f'{model.name.lower()}.py'
+        file.write_bytes(output.encode(sys.getdefaultencoding()))
+        log.debug('Rendered model types to %s', file.absolute())
+
+    # Render the types/__init__.py.jinja template
+    render_template(rootdir, 'types/__init__.py.jinja', params)
 
 
 def render_template(

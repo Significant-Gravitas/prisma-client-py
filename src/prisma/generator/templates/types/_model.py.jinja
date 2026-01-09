@@ -1,18 +1,25 @@
 {% include '_header.py.jinja' %}
-{% from '_utils.py.jinja' import recursive_types, active_provider with context %}
-# -- template types.py.jinja --
+{% from '_utils.py.jinja' import recursive_types with context %}
+# -- template types/_model.py.jinja --
+# Types for model: {{ model.name }}
 from typing import TypeVar
 
-import httpx
-from . import _types
-from .utils import _NoneType
+from ..utils import _NoneType
+from .filters import *
+from .atomic import *
+from .list_filters import *
+
+# Cross-import all model type files for type checker resolution of forward references
+if TYPE_CHECKING:
+{% for other_model in all_models %}
+{% if other_model.name != model.name %}
+    from .{{ other_model.name | lower }} import *  # noqa: F403
+{% endif %}
+{% endfor %}
 
 
 {% set depth = generator.config.recursive_type_depth %}
 
-# TODO: filters with aggregates should have their own recursive fields
-# TODO: cleanup whitespace control
-# TODO: add an argument to signify that the last iteration should be skipped
 {% macro recursive(base) %}
     {% if recursive_types %}
 {{ caller(base, base, '') }}
@@ -75,373 +82,6 @@ class {{ type.name }}(StrEnum):
 {% endif %}
 {% endmacro %}
 
-SortMode = _types.SortMode
-SortOrder = _types.SortOrder
-
-MetricsFormat = _types.MetricsFormat
-
-DatasourceOverride = _types.DatasourceOverride
-HttpConfig = _types.HttpConfig
-
-
-# types that can be serialized to json by our query builder
-{% if recursive_types %}
-Serializable = Union[
-    None,
-    bool,
-    float,
-    int,
-    str,
-    datetime.datetime,
-    List['Serializable'],
-    Dict[None, 'Serializable'],
-    Dict[bool, 'Serializable'],
-    Dict[float, 'Serializable'],
-    Dict[int, 'Serializable'],
-    Dict[str, 'Serializable'],
-]
-{% else %}
-Serializable = Union[
-    None,
-    bool,
-    float,
-    int,
-    str,
-    datetime.datetime,
-    List[Any],
-    Dict[None, Any],
-    Dict[bool, Any],
-    Dict[float, Any],
-    Dict[int, Any],
-    Dict[str, Any],
-]
-{% endif %}
-
-
-{% call(name, next, iteration) recursive('StringFilter') %}
-{{ name }} = TypedDict(
-    '{{ name }}',
-    {
-        'equals': str,
-        'not_in': List[str],
-        'lt': str,
-        'lte': str,
-        'gt': str,
-        'gte': str,
-        'contains': str,
-        'startswith': str,
-        'endswith': str,
-        'in': List[str],
-        {%+ if next != '' -%}
-            'not': Union[str, '{{ next }}'],
-        {% endif %}
-        {%+ if active_provider in ['postgresql', 'cockroachdb', 'mongodb'] -%}
-            'mode': SortMode,
-        {% endif %}
-        {%+ if active_provider in ['postgresql', 'mysql'] -%}
-            'search': str,
-        {% endif %}
-    },
-    total=False,
-)
-{% endcall %}
-
-
-class StringWithAggregatesFilter(StringFilter, total=False):
-    _max: 'StringFilter'
-    _min: 'StringFilter'
-    _sum: 'StringFilter'
-    _avg: 'StringFilter'
-    _count: 'IntFilter'
-
-
-{% call(name, next, iteration) recursive('DateTimeFilter') %}
-{{ name }} = TypedDict(
-    '{{ name }}',
-    {
-        'equals': datetime.datetime,
-        'not_in': List[datetime.datetime],
-        'lt': datetime.datetime,
-        'lte': datetime.datetime,
-        'gt': datetime.datetime,
-        'gte': datetime.datetime,
-        'in': List[datetime.datetime],
-        {%+ if next != '' -%}
-            'not': Union[datetime.datetime, '{{ next }}'],
-        {% endif %}
-    },
-    total=False,
-)
-{% endcall %}
-
-
-class DateTimeWithAggregatesFilter(DateTimeFilter, total=False):
-    _max: 'DateTimeFilter'
-    _min: 'DateTimeFilter'
-    _sum: 'DateTimeFilter'
-    _avg: 'DateTimeFilter'
-    _count: 'IntFilter'
-
-
-{% call(name, next, iteration) recursive('BooleanFilter') %}
-{{ name }} = TypedDict(
-    '{{ name }}',
-    {
-        'equals': bool,
-        {%+ if next != '' -%}
-            'not': Union[bool, '{{ next }}'],
-        {% endif %}
-    },
-    total=False,
-)
-{% endcall %}
-
-
-class BooleanWithAggregatesFilter(BooleanFilter, total=False):
-    _max: 'BooleanFilter'
-    _min: 'BooleanFilter'
-    _sum: 'BooleanFilter'
-    _avg: 'BooleanFilter'
-    _count: 'IntFilter'
-
-
-{% call(name, next, iteration) recursive('IntFilter') %}
-{{ name }} = TypedDict(
-    '{{ name }}',
-    {
-        'equals': int,
-        'not_in': List[int],
-        'lt': int,
-        'lte': int,
-        'gt': int,
-        'gte': int,
-        'in': List[int],
-        {%+ if next != '' -%}
-            'not': Union[int, '{{ next }}'],
-        {% endif %}
-    },
-    total=False,
-)
-{% endcall %}
-
-
-class IntWithAggregatesFilter(IntFilter, total=False):
-    _max: 'IntFilter'
-    _min: 'IntFilter'
-    _sum: 'IntFilter'
-    _avg: 'IntFilter'
-    _count: 'IntFilter'
-
-
-BigIntFilter = IntFilter
-BigIntWithAggregatesFilter = IntWithAggregatesFilter
-{% call(name, next, iteration) recursive('FloatFilter') %}
-{{ name }} = TypedDict(
-    '{{ name }}',
-    {
-        'equals': float,
-        'not_in': List[float],
-        'lt': float,
-        'lte': float,
-        'gt': float,
-        'gte': float,
-        'in': List[float],
-        {%+ if next != '' -%}
-            'not': Union[float, '{{ next }}'],
-        {% endif %}
-    },
-    total=False,
-)
-{% endcall %}
-
-
-class FloatWithAggregatesFilter(FloatFilter, total=False):
-    _max: 'FloatFilter'
-    _min: 'FloatFilter'
-    _sum: 'FloatFilter'
-    _avg: 'FloatFilter'
-    _count: 'IntFilter'
-
-
-{% call(name, next, iteration) recursive('BytesFilter') %}
-{{ name }} = TypedDict(
-    '{{ name }}',
-    {
-        'equals': 'fields.Base64',
-        'in': List['fields.Base64'],
-        'not_in': List['fields.Base64'],
-        {%+ if next != '' -%}
-            'not': Union['fields.Base64', '{{ next }}'],
-        {% endif %}
-    },
-    total=False,
-)
-{% endcall %}
-
-
-class BytesWithAggregatesFilter(BytesFilter, total=False):
-    _max: 'BytesFilter'
-    _min: 'BytesFilter'
-    _sum: 'BytesFilter'
-    _avg: 'BytesFilter'
-    _count: 'IntFilter'
-
-
-# TODO: preview feature for improving JSON filtering
-JsonFilter = TypedDict(
-    'JsonFilter',
-    {
-        'equals': 'fields.Json',
-        'not': 'fields.Json',
-    },
-    total=False,
-)
-
-
-class JsonWithAggregatesFilter(JsonFilter, total=False):
-    _max: 'JsonFilter'
-    _min: 'JsonFilter'
-    _sum: 'JsonFilter'
-    _avg: 'JsonFilter'
-    _count: 'IntFilter'
-
-
-{% call(name, next, iteration) recursive('DecimalFilter') %}
-{{ name }} = TypedDict(
-    '{{ name }}',
-    {
-        'equals': decimal.Decimal,
-        'not_in': List[decimal.Decimal],
-        'lt': decimal.Decimal,
-        'lte': decimal.Decimal,
-        'gt': decimal.Decimal,
-        'gte': decimal.Decimal,
-        'in': List[decimal.Decimal],
-        {%+ if next != '' -%}
-            'not': Union[decimal.Decimal, '{{ next }}'],
-        {% endif %}
-    },
-    total=False,
-)
-{% endcall %}
-
-
-class DecimalWithAggregatesFilter(StringFilter, total=False):
-    _max: 'DecimalFilter'
-    _min: 'DecimalFilter'
-    _sum: 'DecimalFilter'
-    _avg: 'DecimalFilter'
-    _count: 'IntFilter'
-
-
-class _FloatSetInput(TypedDict):
-    set: float
-
-
-class _FloatDivideInput(TypedDict):
-    divide: float
-
-
-class _FloatMultiplyInput(TypedDict):
-    multiply: float
-
-
-class _FloatIncrementInput(TypedDict):
-    increment: float
-
-
-class _FloatDecrementInput(TypedDict):
-    decrement: float
-
-
-class _IntSetInput(TypedDict):
-    set: int
-
-
-class _IntDivideInput(TypedDict):
-    divide: int
-
-
-class _IntMultiplyInput(TypedDict):
-    multiply: int
-
-
-class _IntIncrementInput(TypedDict):
-    increment: int
-
-
-class _IntDecrementInput(TypedDict):
-    decrement: int
-
-
-AtomicFloatInput = Union[
-    _FloatSetInput,
-    _FloatDivideInput,
-    _FloatMultiplyInput,
-    _FloatIncrementInput,
-    _FloatDecrementInput,
-]
-AtomicIntInput = Union[
-    _IntSetInput,
-    _IntDivideInput,
-    _IntMultiplyInput,
-    _IntIncrementInput,
-    _IntDecrementInput,
-]
-AtomicBigIntInput = AtomicIntInput
-
-{% for type, python_type in get_list_types() %}
-class _{{ type }}ListFilterEqualsInput(TypedDict):
-    equals: Optional[List[{{ python_type }}]]
-
-
-class _{{ type }}ListFilterHasInput(TypedDict):
-    has: {{ python_type }}
-
-
-class _{{ type }}ListFilterHasEveryInput(TypedDict):
-    has_every: List[{{ python_type }}]
-
-
-class _{{ type }}ListFilterHasSomeInput(TypedDict):
-    has_some: List[{{ python_type }}]
-
-
-class _{{ type }}ListFilterIsEmptyInput(TypedDict):
-    is_empty: bool
-
-
-{{ type }}ListFilter = Union[
-    _{{ type }}ListFilterHasInput,
-    _{{ type }}ListFilterEqualsInput,
-    _{{ type }}ListFilterHasSomeInput,
-    _{{ type }}ListFilterIsEmptyInput,
-    _{{ type }}ListFilterHasEveryInput,
-]
-
-
-class _{{ type }}ListUpdateSet(TypedDict):
-    set: List[{{ python_type }}]
-
-
-{% if active_provider != 'cockroachdb' %}
-class _{{ type }}ListUpdatePush(TypedDict):
-    push: List[{{ python_type }}]
-{% endif %}
-
-
-{{ type }}ListUpdate = Union[
-    List[{{ python_type }}],
-    _{{ type }}ListUpdateSet,
-    {% if active_provider != 'cockroachdb' %}
-    _{{ type }}ListUpdatePush,
-    {% endif %}
-]
-
-{% endfor %}
-
-{% for model in dmmf.datamodel.models %}
-{% set model_schema = type_schema.get_model(model.name) %}
 # {{ model.name }} types
 
 class {{ model.name }}OptionalCreateInput(TypedDict, total=False):
@@ -588,7 +228,7 @@ class {{ model.name }}Include(TypedDict, total=False):
     {% endfor %}
 
 
-{% for related in dmmf.datamodel.models %}
+{% for related in all_models %}
 {% call(name, next, iteration) recursive('%sIncludeFrom%s' % (related.name, model.name)) %}
 class {{ name }}(TypedDict, total=False):
     """Relational arguments for {{model.name }}"""
@@ -775,8 +415,6 @@ class {{ model.name }}NumberAggregateInput(TypedDict, total=False):
     {{ model.name }}RelationalFieldKeys = _NoneType
 {% endif %}
 
-{% endfor %}
 
-
-# we have to import ourselves as types can be namespaced to types
-from . import types, enums, models, fields
+# we have to import ourselves as forward references may use 'types.XFilter' syntax
+from .. import types, enums, fields
