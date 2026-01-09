@@ -35,6 +35,9 @@ RUN \
     if [[ $OS_DISTRO =~ alpine ]]; then \
       adduser -u ${PRISMA_USER_ID} -D prisma; \
       apk add gcc musl-dev yaml-dev yaml libffi-dev git; \
+      # Prisma engines require OpenSSL 1.1 which isn't available in Alpine 3.17+ \
+      # Install from Alpine 3.16 repo for compatibility \
+      apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/v3.16/main libssl1.1 libcrypto1.1; \
     elif bash -c "[[ ${OS_DISTRO} =~ slim ]]"; then \
       useradd --create-home --uid ${PRISMA_USER_ID} --shell /bin/bash prisma; \
       apt-get update; \
