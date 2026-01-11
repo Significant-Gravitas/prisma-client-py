@@ -456,7 +456,7 @@ def entrypoint(session: nox.Session) -> None:
 
     def wrapper() -> None:
         session_ctx.set(session)
-        cli(args=session.posargs, standalone_mode=False)
+        cli.main(args=session.posargs, standalone_mode=False)
 
     # copy the current context so that the session object is not leaked
     ctx = copy_context()

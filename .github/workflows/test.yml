@@ -78,7 +78,7 @@ jobs:
       - name: Upload coverage
         uses: actions/upload-artifact@v6
         with:
-          name: coverage-data
+          name: coverage-data-${{ matrix.os }}-${{ matrix.python-version }}
           path: ".cache/.coverage.*"
 
   integration:
@@ -343,7 +343,7 @@ jobs:
       - name: Upload coverage
         uses: actions/upload-artifact@v6
         with:
-          name: coverage-data
+          name: coverage-data-${{ matrix.name }}-${{ matrix.python }}
           path: ".cache/.coverage*"
 
   coverage:
@@ -366,7 +366,7 @@ jobs:
       - name: Download coverage data.
         uses: actions/download-artifact@v4
         with:
-          name: coverage-data
+          pattern: coverage-data-*
           path: .cache/
           merge-multiple: true
 
@@ -389,7 +389,7 @@ jobs:
       # delete the temporary coverage artifacts to save on unnecessary cloud storage usage
       - uses: geekyeggo/delete-artifact@v5
         with:
-          name: coverage-data
+          name: coverage-data-*
 
   docker:
     name: docker
