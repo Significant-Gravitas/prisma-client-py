@@ -364,10 +364,11 @@ jobs:
           pip install -U . -r pipelines/requirements/ci.txt
 
       - name: Download coverage data.
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: coverage-data
           path: .cache/
+          merge-multiple: true
 
       - name: Check coverage requirements
         run: |
@@ -386,7 +387,7 @@ jobs:
           nox -s push-coverage
 
       # delete the temporary coverage artifacts to save on unnecessary cloud storage usage
-      - uses: geekyeggo/delete-artifact@v2
+      - uses: geekyeggo/delete-artifact@v5
         with:
           name: coverage-data
 
