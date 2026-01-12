@@ -347,7 +347,7 @@ jobs:
       - name: Upload coverage
         uses: actions/upload-artifact@v6
         with:
-          name: coverage-data-${{ matrix.name }}-${{ matrix.python }}
+          name: coverage-data-${{ matrix.name }}-${{ matrix.version }}-${{ matrix.python }}
           path: ".cache/.coverage*"
           include-hidden-files: true
 
