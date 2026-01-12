@@ -80,6 +80,7 @@ jobs:
         with:
           name: coverage-data-${{ matrix.os }}-${{ matrix.python-version }}
           path: ".cache/.coverage.*"
+          include-hidden-files: true
 
   integration:
     name: integration (${{ matrix.name }})
@@ -299,6 +300,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -U . -r pipelines/requirements/ci.txt
 
+      - name: Create cache directory
+        run: mkdir -p .cache
+
       - name: Start ${{ matrix.name }}
         if: matrix.name != 'SQLite'
         run: |
@@ -345,6 +349,7 @@ jobs:
         with:
           name: coverage-data-${{ matrix.name }}-${{ matrix.python }}
           path: ".cache/.coverage*"
+          include-hidden-files: true
 
   coverage:
     name: coverage

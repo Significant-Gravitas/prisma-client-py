@@ -24,6 +24,9 @@ def setup_coverage(session: nox.Session, identifier: str) -> None:
     if identifier:
         identifier = f'.{identifier}'
 
+    # Ensure the cache directory exists for coverage files
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
     coverage_file = f'.coverage.{session.name}{identifier}'
     session.env['COVERAGE_FILE'] = str(CACHE_DIR / coverage_file)
 
