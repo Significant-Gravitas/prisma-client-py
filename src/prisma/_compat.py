@@ -141,9 +141,6 @@ if TYPE_CHECKING:
     def is_literal_type(type_: type[Any]) -> bool:  # noqa: ARG001
         ...
 
-    def is_typeddict(type_: type[Any]) -> bool:  # noqa: ARG001
-        ...
-
 else:
     if PYDANTIC_V2:
         from pydantic.v1 import Extra as Extra
@@ -151,7 +148,6 @@ else:
             get_args as get_args,
             is_union as is_union,
             get_origin as get_origin,
-            is_typeddict as is_typeddict,
             is_literal_type as is_literal_type,
         )
     else:
@@ -160,7 +156,6 @@ else:
             get_args as get_args,
             is_union as is_union,
             get_origin as get_origin,
-            is_typeddict as is_typeddict,
             is_literal_type as is_literal_type,
         )
 

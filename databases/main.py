@@ -423,7 +423,7 @@ def validate_databases(databases: list[str]) -> list[SupportedDatabase]:
     # I couldn't quickly find an option to support this with Typer so
     # it is handled manually here.
     databases = flatten([d.split(',') for d in databases])
-    return list(map(validate_database, databases))
+    return [validate_database(db) for db in databases]
 
 
 def validate_database(database: str) -> SupportedDatabase:

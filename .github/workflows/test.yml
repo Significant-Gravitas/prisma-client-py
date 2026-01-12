@@ -71,7 +71,7 @@ jobs:
 
       - name: Run tests
         run: |
-          python scripts/ci.py -s test --no-error-on-missing-interpreters -- --pydantic-v2=${{ matrix.pydantic-v2 }}
+          python scripts/ci.py -s test --no-error-on-missing-interpreters -- --pydantic-v2=${{ matrix.pydantic-v2 || 'true' }}
         env:
           TARGET_PYTHON: ${{ matrix.python-version }}
 

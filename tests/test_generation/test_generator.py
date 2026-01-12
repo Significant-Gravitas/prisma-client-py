@@ -109,7 +109,7 @@ def test_invalid_type_argument() -> None:
     with pytest.raises(TypeError) as exc:
         MyGenerator().data_class  # noqa: B018
 
-    assert 'pathlib.Path' in exc.value.args[0]
+    assert ('pathlib.Path' if sys.version_info < (3, 13) else 'pathlib._local.Path') in exc.value.args[0]
     assert 'pydantic.main.BaseModel' in exc.value.args[0]
 
     class MyGenerator2(GenericGenerator[Manifest]):

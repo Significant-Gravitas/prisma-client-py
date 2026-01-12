@@ -20,7 +20,7 @@ log: logging.Logger = logging.getLogger(__name__)
 
 
 # not sure why this type ignore is needed
-@click.command('generate')  # type: ignore
+@click.command('generate')
 @options.schema
 @options.watch
 @click.option(
