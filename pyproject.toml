@@ -1,7 +1,7 @@
 [tool.ruff]
 line-length = 120
 output-format = "grouped"
-target-version = "py37"
+target-version = "py310"
 extend-exclude = ["typesafety/**.py", "src/prisma/_vendor/**.py"]
 
 [tool.ruff.lint]
@@ -90,7 +90,7 @@ ignore = [
     "tests/integrations/**/*",
     "src/prisma/_vendor/**.py",
 ]
-pythonVersion = "3.9"
+pythonVersion = "3.10"
 
 # NOTE: whenever you update any of these values you will most likely also have to update `databases/constants.py::PYRIGHT_CONFIG`
 typeCheckingMode = "strict"
