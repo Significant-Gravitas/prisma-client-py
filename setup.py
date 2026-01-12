@@ -36,9 +36,9 @@ setup(
     version=version,
     author='Robert Craigie',
     author_email='robert@craigie.dev',
-    maintainer='Robert Craigie',
+    maintainer='Reinier (Pwuts) @ AutoGPT <reinier.vanderleer@agpt.co>',
     license='APACHE',
-    url='https://github.com/RobertCraigie/prisma-client-py',
+    url='https://github.com/Significant-Gravitas/prisma-client-py',
     description='Prisma Client Python is an auto-generated and fully type-safe database client',
     install_requires=requirements('base.txt'),
     long_description=readme,
@@ -65,8 +65,8 @@ setup(
     },
     project_urls={
         'Documentation': 'https://prisma-client-py.readthedocs.io',
-        'Source': 'https://github.com/RobertCraigie/prisma-client-py',
-        'Tracker': 'https://github.com/RobertCraigie/prisma-client-py/issues',
+        'Source': 'https://github.com/Significant-Gravitas/prisma-client-py',
+        'Tracker': 'https://github.com/Significant-Gravitas/prisma-client-py/issues',
     },
     keywords=[
         'orm',

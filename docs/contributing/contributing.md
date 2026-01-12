@@ -24,7 +24,7 @@ You can set these environment variables however you'd like to.
 Clone the repository
 
 ```sh
-git clone https://github.com/RobertCraigie/prisma-client-py.git
+git clone https://github.com/Significant-Gravitas/prisma-client-py.git
 cd prisma-client-py
 ```
 

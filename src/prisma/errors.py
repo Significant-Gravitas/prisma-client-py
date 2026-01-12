@@ -170,7 +170,7 @@ class UnsupportedListTypeError(GeneratorError):
     def __init__(self, typ: str) -> None:
         super().__init__(
             f'Cannot use {typ} as a list yet; Please create a '
-            'feature request at https://github.com/RobertCraigie/prisma-client-py/issues/new'
+            'feature request at https://github.com/Significant-Gravitas/prisma-client-py/issues/new'
         )
         self.type = typ
 

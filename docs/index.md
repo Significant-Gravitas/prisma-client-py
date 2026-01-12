@@ -14,13 +14,16 @@
         <img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FJacobCoffee%2Fbfb02a83c8da3cbf53f7772f2cee02ec%2Fraw%2Facb94daa3aedecda67e2c7d8c5aec9765db0734d%2Fformat-badge.json" alt="Code style: ruff">
     </a>
     <a href="https://robertcraigie.github.io/prisma-client-py/htmlcov/index.html">
-        <img src="https://raw.githubusercontent.com/RobertCraigie/prisma-client-py/static/coverage/coverage.svg" alt="Code coverage report">
+        <img src="https://raw.githubusercontent.com/Significant-Gravitas/prisma-client-py/static/coverage/coverage.svg" alt="Code coverage report">
     </a>
-    <img src="https://img.shields.io/github/actions/workflow/status/RobertCraigie/prisma-client-py/test.yml?branch=main&label=tests" alt="GitHub Workflow Status (main)">
+    <img src="https://img.shields.io/github/actions/workflow/status/Significant-Gravitas/prisma-client-py/test.yml?branch=main&label=tests" alt="GitHub Workflow Status (main)">
     <img src="https://img.shields.io/pypi/pyversions/prisma" alt="Supported python versions">
     <img src="https://img.shields.io/pypi/v/prisma" alt="Latest package version">
     </div>
 </div>
+
+> [!WARNING]
+> This fork of Prisma Client Python is looking for maintainers, since the original project [is no longer being maintained](https://github.com/RobertCraigie/prisma-client-py/issues/1073). Contact if you want to help.
 
 <hr>
 
@@ -65,11 +68,6 @@ Supported database providers:
 ## Support
 
 Have any questions or need help using Prisma? Join the [community discord](https://discord.gg/HpFaJbepBH)!
-
-If you don't want to join the discord you can also:
-
-- Create a new [discussion](https://github.com/RobertCraigie/prisma-client-py/discussions/new)
-- Ping me on the [Prisma Slack](https://slack.prisma.io/) `@Robert Craigie`
 
 ## How does Prisma work?
 

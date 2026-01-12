@@ -387,7 +387,7 @@ jobs:
           path: htmlcov
 
       - name: Update static coverage
-        if: (success() || failure()) && github.ref == 'refs/heads/main' && github.repository == 'RobertCraigie/prisma-client-py'
+        if: (success() || failure()) && github.ref == 'refs/heads/main' && github.repository == 'Significant-Gravitas/prisma-client-py'
         run: |
           nox -s push-coverage
 
