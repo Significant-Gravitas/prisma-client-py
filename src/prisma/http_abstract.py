@@ -13,12 +13,13 @@ from typing import (
 from typing_extensions import override
 
 from httpx import Limits, Headers, Timeout
+from httpx._client import BaseClient
 
 from .utils import _NoneType
 from ._types import Method
 from .errors import HTTPClientClosedError
 
-Session = TypeVar('Session')
+Session = TypeVar('Session', bound=BaseClient)
 Response = TypeVar('Response')
 ReturnType = TypeVar('ReturnType')
 MaybeCoroutine = Union[Coroutine[Any, Any, ReturnType], ReturnType]
@@ -59,7 +60,10 @@ class AbstractHTTP(ABC, Generic[Session, Response]):
     def open(self) -> None: ...
 
     @abstractmethod
-    def close(self) -> MaybeCoroutine[None]: ...
+    def close(self) -> MaybeCoroutine[None]:
+        """
+        Close the HTTP session if it is open. MUST set self._session to `None`.
+        """
 
     @property
     def closed(self) -> bool:
