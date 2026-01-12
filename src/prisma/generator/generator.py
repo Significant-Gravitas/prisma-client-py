@@ -57,7 +57,7 @@ DEFAULT_ENV = Environment(
 # results in an overly restrictive type
 DEFAULT_ENV.filters['quote'] = quote  # pyright: ignore
 
-partial_models_ctx: ContextVar[List[PartialModel]] = ContextVar('partial_models_ctx', default=[])
+partial_models_ctx: ContextVar[List[PartialModel]] = ContextVar('partial_models_ctx', default=[])  # noqa: B039
 
 
 class GenericGenerator(ABC, Generic[BaseModelT]):
@@ -67,7 +67,7 @@ class GenericGenerator(ABC, Generic[BaseModelT]):
 
         This is used by prisma to display the post-generate message e.g.
 
-        ✔ Generated Prisma Client Python to ./.venv/lib/python3.9/site-packages/prisma
+        ✔ Generated Prisma Client Python to ./.venv/lib/python3.10/site-packages/prisma
         """
         ...
 

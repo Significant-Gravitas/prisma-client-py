@@ -10,7 +10,6 @@ from copy import deepcopy
 from typing import (
     Iterator,
     Optional,
-    cast,
 )
 from pathlib import Path
 from contextvars import ContextVar, copy_context
@@ -19,7 +18,6 @@ import nox
 import yaml
 import click
 import rtoml
-import typer
 from jinja2 import Environment, StrictUndefined, FileSystemLoader
 from nox.command import CommandFailed
 
@@ -53,23 +51,32 @@ session_ctx: ContextVar[nox.Session] = ContextVar('session_ctx')
 
 
 # TODO: proper progname in help
-cli = typer.Typer(
-    help='Test suite for testing Prisma Client Python against different database providers.',
-)
+@click.group(help='Test suite for testing Prisma Client Python against different database providers.')
+def cli() -> None:
+    pass
 
 
 @cli.command()
+@click.option('--databases', multiple=True, default=SUPPORTED_DATABASES)
+@click.option('--exclude-databases', multiple=True, default=[])
+@click.option('--inplace', is_flag=True, default=False)
+@click.option('--pytest-args', default=None)
+@click.option('--lint/--no-lint', default=True)
+@click.option('--test/--no-test', default=True)
+@click.option('--coverage', is_flag=True, default=False)
+@click.option('--pydantic-v2/--no-pydantic-v2', default=True)
+@click.option('--for-async', type=bool, default=True)
 def test(
     *,
-    databases: list[str] = cast('list[str]', SUPPORTED_DATABASES),  # pyright: ignore[reportCallInDefaultInitializer]
-    exclude_databases: list[str] = [],  # pyright: ignore[reportCallInDefaultInitializer]
-    inplace: bool = False,
-    pytest_args: Optional[str] = None,
-    lint: bool = True,
-    test: bool = True,
-    coverage: bool = False,
-    pydantic_v2: bool = True,
-    for_async: bool = typer.Option(default=True, is_flag=False),  # pyright: ignore[reportCallInDefaultInitializer]
+    databases: tuple[str, ...],
+    exclude_databases: tuple[str, ...],
+    inplace: bool,
+    pytest_args: Optional[str],
+    lint: bool,
+    test: bool,
+    coverage: bool,
+    pydantic_v2: bool,
+    for_async: bool,
 ) -> None:
     """Run unit tests and Pyright"""
     if not pydantic_v2:
@@ -77,9 +84,9 @@ def test(
 
     session = session_ctx.get()
 
-    exclude = set(validate_databases(exclude_databases))
+    exclude = set(validate_databases(list(exclude_databases)))
     validated_databases: list[SupportedDatabase] = [
-        database for database in validate_databases(databases) if database not in exclude
+        database for database in validate_databases(list(databases)) if database not in exclude
     ]
 
     with session.chdir(DATABASES_DIR):
@@ -104,21 +111,29 @@ def test(
 
 
 @cli.command()
-def serve(database: str, *, version: Optional[str] = None) -> None:
+@click.argument('database')
+@click.option('--version', default=None)
+def serve(database: str, version: Optional[str]) -> None:
     """Start a database server using docker-compose"""
     database = validate_database(database)
     start_database(database, version=version, session=session_ctx.get())
 
 
 @cli.command(name='test-inverse')
+@click.option('--databases', multiple=True, default=SUPPORTED_DATABASES)
+@click.option('--coverage', is_flag=True, default=False)
+@click.option('--inplace', is_flag=True, default=False)
+@click.option('--pytest-args', default=None)
+@click.option('--pydantic-v2/--no-pydantic-v2', default=True)
+@click.option('--for-async', type=bool, default=True)
 def test_inverse(
     *,
-    databases: list[str] = cast('list[str]', SUPPORTED_DATABASES),  # pyright: ignore[reportCallInDefaultInitializer]
-    coverage: bool = False,
-    inplace: bool = False,
-    pytest_args: Optional[str] = None,
-    pydantic_v2: bool = True,
-    for_async: bool = typer.Option(default=True, is_flag=False),  # pyright: ignore[reportCallInDefaultInitializer]
+    databases: tuple[str, ...],
+    coverage: bool,
+    inplace: bool,
+    pytest_args: Optional[str],
+    pydantic_v2: bool,
+    for_async: bool,
 ) -> None:
     """Ensure unsupported features actually result in either:
 
@@ -126,7 +141,7 @@ def test_inverse(
     - Our unit tests & linters fail
     """
     session = session_ctx.get()
-    validated_databases = validate_databases(databases)
+    validated_databases = validate_databases(list(databases))
 
     with session.chdir(DATABASES_DIR):
         _setup_test_env(session, pydantic_v2=pydantic_v2, inplace=inplace)
@@ -408,7 +423,7 @@ def validate_databases(databases: list[str]) -> list[SupportedDatabase]:
     # I couldn't quickly find an option to support this with Typer so
     # it is handled manually here.
     databases = flatten([d.split(',') for d in databases])
-    return list(map(validate_database, databases))
+    return [validate_database(db) for db in databases]
 
 
 def validate_database(database: str) -> SupportedDatabase:
@@ -441,7 +456,7 @@ def entrypoint(session: nox.Session) -> None:
 
     def wrapper() -> None:
         session_ctx.set(session)
-        cli(session.posargs)
+        cli.main(args=session.posargs, standalone_mode=False)
 
     # copy the current context so that the session object is not leaked
     ctx = copy_context()

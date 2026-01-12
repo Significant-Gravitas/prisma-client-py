@@ -1,16 +1,20 @@
+from typing import Any, TypeVar, Callable
+
 import click
 
 from .utils import PathlibPath
-from .._types import FuncType
 
-schema: FuncType = click.option(
+FC = TypeVar('FC', bound=click.Command | Callable[..., Any])
+
+
+schema: Callable[[FC], FC] = click.option(  # pyright: ignore[reportGeneralTypeIssues]
     '--schema',
     type=PathlibPath(exists=True, dir_okay=False, resolve_path=True),
     help='The location of the Prisma schema file.',
     required=False,
 )
 
-watch: FuncType = click.option(
+watch: Callable[[FC], FC] = click.option(  # pyright: ignore[reportGeneralTypeIssues]
     '--watch',
     is_flag=True,
     default=False,
@@ -18,7 +22,7 @@ watch: FuncType = click.option(
     help='Watch the Prisma schema and rerun after a change',
 )
 
-skip_generate: FuncType = click.option(
+skip_generate: Callable[[FC], FC] = click.option(  # pyright: ignore[reportGeneralTypeIssues]
     '--skip-generate',
     is_flag=True,
     default=False,

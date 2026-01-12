@@ -37,7 +37,7 @@
 
       post = await client.post.create({'title': 'Hello', 'published': True, 'desc': 'description'})
       reveal_type(post.id)  # N: Revealed type is "builtins.str"
-      reveal_type(post.desc)  # N: Revealed type is "Union[builtins.str, None]"
+      reveal_type(post.desc)  # N: Revealed type is "builtins.str | None"
       reveal_type(post.title)  # N: Revealed type is "builtins.str"
 
     async def test_create_dynamic_data(client: Prisma) -> None:
@@ -62,7 +62,7 @@
 
     async def test_find_unique_output(client: Prisma) -> None:
       post = await client.post.find_unique({'id': 'dbkh232'})
-      reveal_type(post)  # N: Revealed type is "Union[prisma.models.Post, None]"
+      reveal_type(post)  # N: Revealed type is "prisma.models.Post | None"
 
       if post is not None:
         reveal_type(post.id)  # N: Revealed type is "builtins.str"
@@ -74,40 +74,40 @@
     async def test_include(client: Prisma) -> None:
       user = await client.user.find_unique({'id': '1'}, include={'posts': True})
       if user is not None:
-        reveal_type(user.posts)  # N: Revealed type is "Union[builtins.list[prisma.models.Post], None]"
+        reveal_type(user.posts)  # N: Revealed type is "builtins.list[prisma.models.Post] | None"
         if user.posts is not None and len(user.posts) == 0:
           print('user does not have any posts!')
         else:
           print('user has at least one post')
 
-        reveal_type(user.profile)  # N: Revealed type is "Union[prisma.models.Profile, None]"
+        reveal_type(user.profile)  # N: Revealed type is "prisma.models.Profile | None"
 
       user = await client.user.find_unique(include={'posts': True}, where={'id': '1'})
       if user is not None:
-        reveal_type(user.posts)  # N: Revealed type is "Union[builtins.list[prisma.models.Post], None]"
+        reveal_type(user.posts)  # N: Revealed type is "builtins.list[prisma.models.Post] | None"
 
       user = await client.user.find_unique({'id': '1'}, {'posts': True})
       if user is not None:
-        reveal_type(user.posts)  # N: Revealed type is "Union[builtins.list[prisma.models.Post], None]"
+        reveal_type(user.posts)  # N: Revealed type is "builtins.list[prisma.models.Post] | None"
 
       user = await client.user.find_unique({'id': '1'}, dict(posts=True))
       if user is not None:
-        reveal_type(user.posts)  # N: Revealed type is "Union[builtins.list[prisma.models.Post], None]"
+        reveal_type(user.posts)  # N: Revealed type is "builtins.list[prisma.models.Post] | None"
 
       user = await client.user.find_unique({'id': '1'}, include={'posts': True, 'profile': True})
       if user is not None:
-        reveal_type(user.posts)  # N: Revealed type is "Union[builtins.list[prisma.models.Post], None]"
-        reveal_type(user.profile)  # N: Revealed type is "Union[prisma.models.Profile, None]"
+        reveal_type(user.posts)  # N: Revealed type is "builtins.list[prisma.models.Post] | None"
+        reveal_type(user.profile)  # N: Revealed type is "prisma.models.Profile | None"
 
       user = await client.user.find_unique({'id': '1'}, include={'posts': False})
       if user is not None:
-        reveal_type(user.posts)  # N: Revealed type is "Union[builtins.list[prisma.models.Post], None]"
-        reveal_type(user.profile)  # N: Revealed type is "Union[prisma.models.Profile, None]"
+        reveal_type(user.posts)  # N: Revealed type is "builtins.list[prisma.models.Post] | None"
+        reveal_type(user.profile)  # N: Revealed type is "prisma.models.Profile | None"
 
       user = await client.user.find_unique({'id': '1'})
       if user is not None:
-        reveal_type(user.posts)  # N: Revealed type is "Union[builtins.list[prisma.models.Post], None]"
-        reveal_type(user.profile)  # N: Revealed type is "Union[prisma.models.Profile, None]"
+        reveal_type(user.posts)  # N: Revealed type is "builtins.list[prisma.models.Post] | None"
+        reveal_type(user.profile)  # N: Revealed type is "prisma.models.Profile | None"
 
     async def test_nested_include(client: Prisma) -> None:
       user = await client.user.find_unique(
@@ -122,11 +122,11 @@
       )
 
       assert user is not None
-      reveal_type(user.profile)  # N: Revealed type is "Union[prisma.models.Profile, None]"
+      reveal_type(user.profile)  # N: Revealed type is "prisma.models.Profile | None"
 
       if user.posts is not None:
         reveal_type(user.posts)  # N: Revealed type is "builtins.list[prisma.models.Post]"
-        reveal_type(user.posts[0].categories)  # N: Revealed type is "Union[builtins.list[prisma.models.Category], None]"
+        reveal_type(user.posts[0].categories)  # N: Revealed type is "builtins.list[prisma.models.Category] | None"
 
     async def test_explicit_include_type(client: Prisma) -> None:
       user = await client.user.find_unique(
@@ -134,7 +134,7 @@
         include=UserInclude(posts=True)
       )
       assert user is not None
-      reveal_type(user.posts)  # N: Revealed type is "Union[builtins.list[prisma.models.Post], None]"
+      reveal_type(user.posts)  # N: Revealed type is "builtins.list[prisma.models.Post] | None"
 
     async def test_correct_return_model_type(client: Prisma) -> None:
       query = '''
@@ -211,7 +211,7 @@
 
     def test_validator() -> None:
       validated = validate(PostCreateInput, {})
-      reveal_type(validated.get('id'))  # N: Revealed type is "Union[builtins.str, None]"
+      reveal_type(validated.get('id'))  # N: Revealed type is "builtins.str | None"
 
     async def test_count_select(client: Prisma) -> None:
       count = await client.post.count()

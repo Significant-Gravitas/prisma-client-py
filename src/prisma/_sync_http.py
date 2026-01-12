@@ -10,8 +10,6 @@ __all__ = ('HTTP', 'SyncHTTP', 'Response', 'client')
 
 
 class SyncHTTP(AbstractHTTP[httpx.Client, httpx.Response]):
-    session: httpx.Client
-
     @override
     def download(self, url: str, dest: str) -> None:
         with self.session.stream('GET', url, timeout=None) as resp:
@@ -32,7 +30,7 @@ class SyncHTTP(AbstractHTTP[httpx.Client, httpx.Response]):
     def close(self) -> None:
         if self.should_close():
             self.session.close()
-            self.session = None  # type: ignore[assignment]
+            self.session = None
 
     def __del__(self) -> None:
         self.close()

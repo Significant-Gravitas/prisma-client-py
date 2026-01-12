@@ -1,17 +1,16 @@
 import sys
 from types import ModuleType
-from typing import Any, Type, TypeVar, cast
+from typing import Any, Type, TypeVar, cast, is_typeddict
 from functools import lru_cache
 
 from pydantic import BaseModel
 
 from ._types import Protocol, runtime_checkable
-from ._compat import PYDANTIC_V2, Extra, is_typeddict
+from ._compat import PYDANTIC_V2, Extra
 
 __all__ = ('validate',)
 
-# NOTE: we should use bound=TypedDict but mypy does not support this
-T = TypeVar('T')
+TD = TypeVar('TD')
 
 
 class Config:
@@ -53,7 +52,7 @@ def patch_pydantic() -> None:
 # https://github.com/pydantic/pydantic/issues/7111
 
 
-def validate(type: Type[T], data: Any) -> T:
+def validate(type: Type[TD], data: Any) -> TD:
     """Validate untrusted data matches a given TypedDict
 
     For example:
@@ -65,7 +64,7 @@ def validate(type: Type[T], data: Any) -> T:
         validated = validate(types.UserCreateInput, data)
         user = await User.prisma().create(data=validated)
     """
-    create_model_from_typeddict: Any
+    # TODO: yeet Pydantic v1 support and clean up this mess
     if PYDANTIC_V2:
         from pydantic.v1 import create_model_from_typeddict
     else:
@@ -88,12 +87,12 @@ def validate(type: Type[T], data: Any) -> T:
         # pyright is more strict than mypy here, we also don't care about the
         # incorrectly inferred type as we have verified that the given type
         # is indeed a TypedDict
-        model = create_model_from_typeddict(
-            type,
+        model = create_model_from_typeddict(  # pyright: ignore[reportCallIssue]
+            type,  # pyright: ignore[reportArgumentType]
             __config__=Config,  # pyright: ignore[reportGeneralTypeIssues]
         )
         model.update_forward_refs(**vars(_get_module(type)))
         type.__pydantic_model__ = model  # type: ignore
 
-    instance = model.parse_obj(data)
-    return cast(T, instance.dict(exclude_unset=True))
+    instance = model.parse_obj(data)  # pyright: ignore[reportDeprecated]
+    return cast(TD, instance.dict(exclude_unset=True))  # pyright: ignore[reportDeprecated]
