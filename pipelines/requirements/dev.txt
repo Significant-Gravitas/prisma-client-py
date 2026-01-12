@@ -7,6 +7,6 @@ wheel==0.44.0
 pre-commit==2.21.0
 twine==5.1.1
 typer>=0.15.0
-rtoml==0.11.0
+rtoml==0.13.0
 GitPython
 distro
