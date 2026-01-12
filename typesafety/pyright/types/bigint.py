@@ -91,7 +91,7 @@ async def filtering(client: Prisma) -> None:
         },
     )
     await client.types.find_first(
-        where={  # E: Argument of type "dict[str, dict[str, tuple[Unknown, ...]]]" cannot be assigned to parameter "where" of type "TypesWhereInput | None" in function "find_first"
+        where={  # E: Argument of type "dict[str, dict[str, tuple[()]]]" cannot be assigned to parameter "where" of type "TypesWhereInput | None" in function "find_first"
             'bigint': {
                 'lte': tuple(),
             },
