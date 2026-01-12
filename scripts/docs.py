@@ -6,7 +6,7 @@ from prisma import config
 ROOTDIR = Path(__file__).parent.parent
 DOCS_DIR = ROOTDIR / 'docs'
 
-SHOWCASE_GIF = 'https://raw.githubusercontent.com/RobertCraigie/prisma-client-py/main/docs/showcase.gif'
+SHOWCASE_GIF = 'https://raw.githubusercontent.com/Significant-Gravitas/prisma-client-py/main/docs/showcase.gif'
 
 
 # TODO: make this nicer

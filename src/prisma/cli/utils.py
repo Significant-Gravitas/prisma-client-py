@@ -12,12 +12,14 @@ from typing import (
     Mapping,
     NoReturn,
     Optional,
+    cast,
     overload,
 )
 from pathlib import Path
 from typing_extensions import override
 
 import click
+from click.types import ParamTypeValue
 
 from . import prisma
 from ..utils import module_exists
@@ -26,7 +28,7 @@ from .._types import Literal
 log: logging.Logger = logging.getLogger(__name__)
 
 
-class PrismaCLI(click.MultiCommand):
+class PrismaCLI(click.Group):
     base_package: str = 'prisma.cli.commands'
     folder: Path = Path(__file__).parent / 'commands'
 
@@ -78,7 +80,7 @@ class PathlibPath(click.Path):
         return Path(str(super().convert(value, param, ctx)))
 
 
-class EnumChoice(click.Choice):
+class EnumChoice(click.Choice[ParamTypeValue]):
     """A Click choice argument created from an Enum
 
     choices are gathered from enum values, not their python keys, e.g.
@@ -102,8 +104,8 @@ class EnumChoice(click.Choice):
         value: str,
         param: Optional[click.Parameter],
         ctx: Optional[click.Context],
-    ) -> str:
-        return str(self.__enum(super().convert(value, param, ctx)).value)
+    ) -> ParamTypeValue:
+        return cast(ParamTypeValue, self.__enum(super().convert(value, param, ctx)).value)
 
 
 def is_module(path: Path) -> bool:

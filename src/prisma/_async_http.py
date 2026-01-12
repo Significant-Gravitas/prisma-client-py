@@ -11,8 +11,6 @@ __all__ = ('HTTP', 'AsyncHTTP', 'Response', 'client')
 
 
 class AsyncHTTP(AbstractHTTP[httpx.AsyncClient, httpx.Response]):
-    session: httpx.AsyncClient
-
     @override
     async def download(self, url: str, dest: str) -> None:
         async with self.session.stream('GET', url, timeout=None) as resp:
@@ -33,11 +31,7 @@ class AsyncHTTP(AbstractHTTP[httpx.AsyncClient, httpx.Response]):
     async def close(self) -> None:
         if self.should_close():
             await self.session.aclose()
-
-            # mypy doesn't like us assigning None as the type of
-            # session is not optional, however the argument that
-            # the setter takes is optional, so this is fine
-            self.session = None  # type: ignore[assignment]
+            self.session = None
 
 
 HTTP = AsyncHTTP

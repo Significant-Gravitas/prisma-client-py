@@ -320,7 +320,7 @@ class PrismaPlugin(Plugin):
             raise TypeError(f'Expected builtins.dict to be called but got {expr.callee.fullname} instead')
 
         parsed = {}
-        for arg_name, value_expr in zip(expr.arg_names, expr.args):
+        for arg_name, value_expr in zip(expr.arg_names, expr.args, strict=False):
             if arg_name is None:
                 continue
 
@@ -375,7 +375,7 @@ ERROR_PARSING = ErrorCode('prisma-parsing', 'Unable to parse', 'Prisma')
 
 
 def error_unable_to_parse(api: CheckerPluginInterface, context: Context, detail: str) -> None:
-    link = 'https://github.com/RobertCraigie/prisma-client-py/issues/new/choose'
+    link = 'https://github.com/Significant-Gravitas/prisma-client-py/issues/new/choose'
     full_message = f'The prisma mypy plugin was unable to parse: {detail}\n'
     full_message += f'Please consider reporting this bug at {link} so we can try to fix it!'
     api.fail(full_message, context, code=ERROR_PARSING)

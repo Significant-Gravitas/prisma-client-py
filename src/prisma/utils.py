@@ -58,7 +58,7 @@ def async_run(coro: Coroutine[Any, Any, _T]) -> _T:
 
 
 def is_coroutine(obj: Any) -> TypeGuard[CoroType]:
-    return asyncio.iscoroutinefunction(obj) or inspect.isgeneratorfunction(obj)
+    return inspect.iscoroutinefunction(obj) or inspect.isgeneratorfunction(obj)
 
 
 def module_exists(name: str) -> bool:

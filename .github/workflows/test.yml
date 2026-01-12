@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: [3.8, 3.9, "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
         include:
           - os: ubuntu-latest
             python-version: "3.10"
@@ -39,19 +39,19 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install . -r pipelines/requirements/ci.txt
-
-      - uses: actions/cache@v3
+      - uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('pipelines/requirements/*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - uses: actions/cache@v3
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install . -r pipelines/requirements/ci.txt
+
+      - uses: actions/cache@v5
         with:
           path: .mypy_cache
           key: ${{ runner.os }}-mypy
@@ -71,15 +71,16 @@ jobs:
 
       - name: Run tests
         run: |
-          python scripts/ci.py -s test --no-error-on-missing-interpreters -- --pydantic-v2=${{ matrix.pydantic-v2 }}
+          python scripts/ci.py -s test --no-error-on-missing-interpreters -- --pydantic-v2=${{ matrix.pydantic-v2 || 'true' }}
         env:
           TARGET_PYTHON: ${{ matrix.python-version }}
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
-          name: coverage-data
+          name: coverage-data-${{ matrix.os }}-${{ matrix.python-version }}
           path: ".cache/.coverage.*"
+          include-hidden-files: true
 
   integration:
     name: integration (${{ matrix.name }})
@@ -99,17 +100,17 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install . -r pipelines/requirements/ci.txt
-
-      - uses: actions/cache@v3
+      - uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('pipelines/requirements/*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install . -r pipelines/requirements/ci.txt
 
       - name: Run tests
         run: |
@@ -123,7 +124,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - python-version: 3.9
+          - python-version: "3.10"
 
     steps:
       - uses: actions/checkout@v4
@@ -133,17 +134,17 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install . -r pipelines/requirements/ci.txt
-
-      - uses: actions/cache@v3
+      - uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('pipelines/requirements/*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install . -r pipelines/requirements/ci.txt
 
       - name: Run Pyright tests
         run: |
@@ -168,17 +169,17 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -U . -r pipelines/requirements/ci.txt
-
-      - uses: actions/cache@v3
+      - uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('pipelines/requirements/*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -U . -r pipelines/requirements/ci.txt
 
       # TODO: add coverage for our mypy plugin
       - name: Check linters
@@ -206,19 +207,19 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -U . -r pipelines/requirements/ci.txt
-
-      - uses: actions/cache@v3
+      - uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('pipelines/requirements/*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - uses: actions/cache@v3
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -U . -r pipelines/requirements/ci.txt
+
+      - uses: actions/cache@v5
         with:
           path: .mypy_cache
           key: ${{ runner.os }}-mypy
@@ -265,12 +266,6 @@ jobs:
             version: "15"
             env: POSTGRESQL_URL
             url: postgresql://postgres:prisma@localhost:5438/postgres
-            python: "3.9"
-
-          - name: PostgreSQL
-            version: "15"
-            env: POSTGRESQL_URL
-            url: postgresql://postgres:prisma@localhost:5438/postgres
             python: "3.11"
 
           - name: CockroachDB
@@ -293,17 +288,20 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -U . -r pipelines/requirements/ci.txt
-
-      - uses: actions/cache@v3
+      - uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('pipelines/requirements/*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -U . -r pipelines/requirements/ci.txt
+
+      - name: Create cache directory
+        run: mkdir -p .cache
 
       - name: Start ${{ matrix.name }}
         if: matrix.name != 'SQLite'
@@ -347,10 +345,11 @@ jobs:
           COVERAGE_FILE: .cache/.coverage.databases
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
-          name: coverage-data
+          name: coverage-data-${{ matrix.name }}-${{ matrix.version }}-${{ matrix.python }}
           path: ".cache/.coverage*"
+          include-hidden-files: true
 
   coverage:
     name: coverage
@@ -370,10 +369,11 @@ jobs:
           pip install -U . -r pipelines/requirements/ci.txt
 
       - name: Download coverage data.
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: coverage-data
+          pattern: coverage-data-*
           path: .cache/
+          merge-multiple: true
 
       - name: Check coverage requirements
         run: |
@@ -381,20 +381,20 @@ jobs:
 
       - name: Upload coverage report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: htmlcov
           path: htmlcov
 
       - name: Update static coverage
-        if: (success() || failure()) && github.ref == 'refs/heads/main' && github.repository == 'RobertCraigie/prisma-client-py'
+        if: (success() || failure()) && github.ref == 'refs/heads/main' && github.repository == 'Significant-Gravitas/prisma-client-py'
         run: |
           nox -s push-coverage
 
       # delete the temporary coverage artifacts to save on unnecessary cloud storage usage
-      - uses: geekyeggo/delete-artifact@v2
+      - uses: geekyeggo/delete-artifact@v5
         with:
-          name: coverage-data
+          name: coverage-data-*
 
   docker:
     name: docker
@@ -403,7 +403,7 @@ jobs:
       fail-fast: false
       matrix:
         docker-platform: [linux/amd64, linux/arm64]
-        python-os-distro: [slim-bullseye, alpine]
+        python-os-distro: [slim-bookworm, alpine]
         exclude:
           # Dockerfile is currently broken for alpine / arm64
           # https://github.com/RobertCraigie/prisma-client-py/issues/581
