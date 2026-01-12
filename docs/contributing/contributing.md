@@ -61,7 +61,7 @@ You can run the linters and tests with coverage with the following commands.
 ```sh
 make format
 nox -s setup lint
-nox -s test -p 3.9
+nox -s test -p 3.10
 nox -s report
 ```
 
@@ -157,13 +157,13 @@ You can now add whatever integration specific commands you need.
 You can run the integration tests only with the following command:
 
 ```sh
-nox -s test -p 3.9 -- tests/integrations/
+nox -s test -p 3.10 -- tests/integrations/
 ```
 
 Or a specific test:
 
 ```sh
-nox -s test -p 3.9 -- --confcutdir . tests/integrations/postgresql
+nox -s test -p 3.10 -- --confcutdir . tests/integrations/postgresql
 ```
 
 !!! warning
@@ -203,13 +203,13 @@ async def test_example() -> None:
 The tests can then be ran with nox, e.g.
 
 ```sh
-nox -s test -p 3.9
+nox -s test -p 3.10
 ```
 
 You can pass arguments directly to pytest like so:
 
 ```sh
-nox -s test -p 3.9 -- -x --ignore=tests/integrations
+nox -s test -p 3.10 -- -x --ignore=tests/integrations
 ```
 
 For writing good test docstrings see [this article](https://jml.io/pages/test-docstrings.html).
@@ -221,13 +221,13 @@ For a more specififc test case look through the tests and find one that is simil
 We use [inline-snapshot](https://github.com/15r10nk/inline-snapshot) for, you guessed it, inline snapshots! If you're working with these snapshots you'll likely want to run tests with `--inline-snapshot=create` or `--inline-snapshot=fix`, for example:
 
 ```
-nox -s test -p 3.9 -- --inline-snapshot=fix
+nox -s test -p 3.10 -- --inline-snapshot=fix
 ```
 
 We also use [syrupy](https://github.com/tophat/syrupy) to manage test snapshots that would be better to persist to standalone files. You can update the generated snapshots by running tests with `--snapshot-update`, for example:
 
 ```
-nox -s test -p 3.9 -- --snapshot-update tests/test_generation/exhaustive
+nox -s test -p 3.10 -- --snapshot-update tests/test_generation/exhaustive
 ```
 
 ### Type Tests

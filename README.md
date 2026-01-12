@@ -166,7 +166,7 @@ SQLite database database.db created at file:database.db
 
 🚀  Your database is now in sync with your schema. Done in 26ms
 
-✔ Generated Prisma Client Python to ./.venv/lib/python3.9/site-packages/prisma in 265ms
+✔ Generated Prisma Client Python to ./.venv/lib/python3.10/site-packages/prisma in 265ms
 ```
 
 It should be noted that whenever you make changes to your `schema.prisma` file you will have to re-generate the client, you can do this automatically by running `prisma generate --watch`.

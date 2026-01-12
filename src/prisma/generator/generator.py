@@ -67,7 +67,7 @@ class GenericGenerator(ABC, Generic[BaseModelT]):
 
         This is used by prisma to display the post-generate message e.g.
 
-        ✔ Generated Prisma Client Python to ./.venv/lib/python3.9/site-packages/prisma
+        ✔ Generated Prisma Client Python to ./.venv/lib/python3.10/site-packages/prisma
         """
         ...
 
