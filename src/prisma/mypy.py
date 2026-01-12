@@ -320,7 +320,7 @@ class PrismaPlugin(Plugin):
             raise TypeError(f'Expected builtins.dict to be called but got {expr.callee.fullname} instead')
 
         parsed = {}
-        for arg_name, value_expr in zip(expr.arg_names, expr.args):
+        for arg_name, value_expr in zip(expr.arg_names, expr.args, strict=False):
             if arg_name is None:
                 continue
 
