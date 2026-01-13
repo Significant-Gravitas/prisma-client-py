@@ -9,8 +9,13 @@ from typing import TYPE_CHECKING, Any
 {% if recursive_types %}
 from typing_extensions import LiteralString  # noqa: F401
 {% else %}
-LiteralString = str
+from typing import TypeAlias
+
+LiteralString: TypeAlias = str
 {% endif %}
+
+# List of submodules for validator forward reference resolution
+_SUBMODULES = ['atomic', 'filters', 'list_filters'{% for model in dmmf.datamodel.models %}, '{{ model.name | lower }}'{% endfor %}]
 
 if TYPE_CHECKING:
     # Direct re-exports for type checking
@@ -21,16 +26,22 @@ if TYPE_CHECKING:
     from .{{ model.name | lower }} import *  # noqa: F401, F403
     {% endfor %}
 else:
+    import importlib
+
     # Lazy attribute access at runtime
     def __getattr__(name: str) -> Any:
         """Allow attribute access to types defined in submodules."""
         # Try each submodule
-        import importlib
-        for module_name in ['atomic', 'filters', 'list_filters'{% for model in dmmf.datamodel.models %}, '{{ model.name | lower }}'{% endfor %}]:
-            try:
-                module = importlib.import_module(f'.{module_name}', __package__)
-                if hasattr(module, name):
-                    return getattr(module, name)
-            except (ImportError, AttributeError):
-                continue
+        for module_name in _SUBMODULES:
+            module = importlib.import_module(f'.{module_name}', __package__)
+            if hasattr(module, name):
+                return getattr(module, name)
         raise AttributeError(f"module 'prisma.types' has no attribute {name!r}")
+
+    def __dict__():
+        return {
+            name
+            for module_name in _SUBMODULES
+            for name in dir(importlib.import_module(f'.{module_name}', __package__))
+            if not name.startswith('_')
+        }

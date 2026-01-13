@@ -1,4 +1,5 @@
 import sys
+import warnings
 from types import ModuleType
 from typing import Any, Type, TypeVar, cast, is_typeddict
 from functools import lru_cache
@@ -7,6 +8,16 @@ from pydantic import BaseModel
 
 from ._types import Protocol, runtime_checkable
 from ._compat import PYDANTIC_V2, Extra
+
+# Python 3.13+ raises a DeprecationWarning for ForwardRef._evaluate without type_params.
+# This is an issue in pydantic v1's typing module that we can't fix here.
+# Filter these warnings to avoid spurious failures.
+if sys.version_info >= (3, 13):
+    warnings.filterwarnings(
+        'ignore',
+        message=r"Failing to pass a value to the 'type_params' parameter",
+        category=DeprecationWarning,
+    )
 
 __all__ = ('validate',)
 

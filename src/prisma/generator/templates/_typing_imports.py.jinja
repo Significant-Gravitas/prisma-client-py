@@ -40,5 +40,6 @@ from builtins import float as _float
 {% if recursive_types %}
 from typing_extensions import LiteralString
 {% else %}
-LiteralString = str
+from typing import TypeAlias
+LiteralString: TypeAlias = str
 {% endif %}

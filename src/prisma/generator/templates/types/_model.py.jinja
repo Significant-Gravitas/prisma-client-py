@@ -14,28 +14,6 @@ from .list_filters import *
 
 # --- Types for model: {{ model.name }} --- #
 
-{% set other_models = all_models | selectattr('name', 'ne', model.name) | list %}
-{% if other_models %}
-# Cross-import related model types for type checker resolution
-if TYPE_CHECKING:
-{% for other_model in other_models %}
-    from .{{ other_model.name | lower }} import (
-        {{ other_model.name }}WhereInput,
-        {{ other_model.name }}WhereUniqueInput,
-        {{ other_model.name }}OrderByInput,
-        {{ other_model.name }}ScalarFieldKeys,
-        {{ other_model.name }}RelationFilter,
-        {{ other_model.name }}ListRelationFilter,
-        {{ other_model.name }}CreateWithoutRelationsInput,
-        {{ other_model.name }}CreateNestedWithoutRelationsInput,
-        {{ other_model.name }}CreateManyNestedWithoutRelationsInput,
-        {{ other_model.name }}UpdateOneWithoutRelationsInput,
-        {{ other_model.name }}UpdateManyWithoutRelationsInput,
-        {{ other_model.name }}ConnectOrCreateWithoutRelationsInput,
-    )
-{% endfor %}
-{% endif %}
-
 
 {% set depth = generator.config.recursive_type_depth %}
 
@@ -431,4 +409,25 @@ class {{ model.name }}NumberAggregateInput(TypedDict, total=False):
     ]
 {% else -%}
     {{ model.name }}RelationalFieldKeys = _NoneType
+{% endif %}
+
+{% set other_models = all_models | selectattr('name', 'ne', model.name) | list %}
+{% if other_models %}
+# Cross-import related model types for resolution of forward references
+{% for other_model in other_models %}
+from .{{ other_model.name | lower }} import (
+    {{ other_model.name }}WhereInput,
+    {{ other_model.name }}WhereUniqueInput,
+    {{ other_model.name }}OrderByInput,
+    {{ other_model.name }}ScalarFieldKeys,
+    {{ other_model.name }}RelationFilter,
+    {{ other_model.name }}ListRelationFilter,
+    {{ other_model.name }}CreateWithoutRelationsInput,
+    {{ other_model.name }}CreateNestedWithoutRelationsInput,
+    {{ other_model.name }}CreateManyNestedWithoutRelationsInput,
+    {{ other_model.name }}UpdateOneWithoutRelationsInput,
+    {{ other_model.name }}UpdateManyWithoutRelationsInput,
+    {{ other_model.name }}ConnectOrCreateWithoutRelationsInput,
+)
+{% endfor %}
 {% endif %}
