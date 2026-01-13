@@ -1,29 +1,36 @@
+"""This module re-exports all type definitions for backward compatibility"""
 {% include '_header.py.jinja' %}
+
 # -- template types/__init__.py.jinja --
-# This module re-exports all type definitions for backward compatibility
 
-from .filters import *  # noqa: F403, TID251
-from .atomic import *  # noqa: F403, TID251
-from .list_filters import *  # noqa: F403, TID251
+from typing import TYPE_CHECKING, Any
 
-{% for model in dmmf.datamodel.models %}
-from .{{ model.name | lower }} import *  # noqa: F403, TID251
-{% endfor %}
+{% from '_utils.py.jinja' import recursive_types with context %}
+{% if recursive_types %}
+from typing_extensions import LiteralString  # noqa: F401
+{% else %}
+LiteralString = str
+{% endif %}
 
-# Collect __all__ from submodules for proper re-export
-def __getattr__(name: str) -> Any:
-    """Allow attribute access to types defined in submodules."""
-    # Try each submodule
-    import importlib
-    for module_name in ['filters', 'atomic', 'list_filters'{% for model in dmmf.datamodel.models %}, '{{ model.name | lower }}'{% endfor %}]:
-        try:
-            module = importlib.import_module(f'.{module_name}', __package__)
-            if hasattr(module, name):
-                return getattr(module, name)
-        except (ImportError, AttributeError):
-            continue
-    raise AttributeError(f"module 'prisma.types' has no attribute {name!r}")
-
-
-# we have to import ourselves as types can be namespaced to types
-from .. import types, enums, models, fields  # noqa: TID251
+if TYPE_CHECKING:
+    # Direct re-exports for type checking
+    from .atomic import *  # noqa: F401, F403
+    from .filters import *  # noqa: F401, F403
+    from .list_filters import *  # noqa: F401, F403
+    {% for model in dmmf.datamodel.models %}
+    from .{{ model.name | lower }} import *  # noqa: F401, F403
+    {% endfor %}
+else:
+    # Lazy attribute access at runtime
+    def __getattr__(name: str) -> Any:
+        """Allow attribute access to types defined in submodules."""
+        # Try each submodule
+        import importlib
+        for module_name in ['atomic', 'filters', 'list_filters'{% for model in dmmf.datamodel.models %}, '{{ model.name | lower }}'{% endfor %}]:
+            try:
+                module = importlib.import_module(f'.{module_name}', __package__)
+                if hasattr(module, name):
+                    return getattr(module, name)
+            except (ImportError, AttributeError):
+                continue
+        raise AttributeError(f"module 'prisma.types' has no attribute {name!r}")

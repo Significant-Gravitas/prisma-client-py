@@ -1,5 +1,7 @@
 {% include '_header.py.jinja' %}
+
 # -- template http.py.jinja --
+
 {% if generator.config.interface == 'asyncio' %}
 from ._async_http import (
     HTTP as HTTP,

@@ -1,11 +1,11 @@
 {% include '_header.py.jinja' %}
 {% from '_utils.py.jinja' import recursive_types, active_provider with context %}
+
+{% include '_typing_imports.py.jinja' %}
+
 # -- template types/filters.py.jinja --
-from typing import TypeVar
 
-import httpx
-from .. import _types
-
+from .. import fields, _types
 
 {% set depth = generator.config.recursive_type_depth %}
 
@@ -296,7 +296,3 @@ class DecimalWithAggregatesFilter(StringFilter, total=False):
     _sum: 'DecimalFilter'
     _avg: 'DecimalFilter'
     _count: 'IntFilter'
-
-
-# we need to import fields for forward references
-from .. import fields  # noqa: TID251

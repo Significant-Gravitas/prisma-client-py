@@ -1,19 +1,25 @@
 {% include '_header.py.jinja' %}
 {% from '_utils.py.jinja' import recursive_types with context %}
-# -- template types/_model.py.jinja --
-# Types for model: {{ model.name }}
 
+{% include '_typing_imports.py.jinja' %}
+
+# -- template types/_model.py.jinja --
+
+from .. import types, enums, fields
 from ..utils import _NoneType
-from .filters import *  # noqa: TID251
-from .atomic import *  # noqa: TID251
-from .list_filters import *  # noqa: TID251
+from .atomic import *
+from .filters import *
+from .list_filters import *
+
+
+# --- Types for model: {{ model.name }} --- #
 
 {% set other_models = all_models | selectattr('name', 'ne', model.name) | list %}
 {% if other_models %}
 # Cross-import related model types for type checker resolution
 if TYPE_CHECKING:
 {% for other_model in other_models %}
-    from .{{ other_model.name | lower }} import (  # noqa: TID251
+    from .{{ other_model.name | lower }} import (
         {{ other_model.name }}WhereInput,
         {{ other_model.name }}WhereUniqueInput,
         {{ other_model.name }}OrderByInput,
@@ -426,7 +432,3 @@ class {{ model.name }}NumberAggregateInput(TypedDict, total=False):
 {% else -%}
     {{ model.name }}RelationalFieldKeys = _NoneType
 {% endif %}
-
-
-# we have to import ourselves as forward references may use 'types.XFilter' syntax
-from .. import types, enums, fields  # noqa: TID251

@@ -1,5 +1,9 @@
 {% include '_header.py.jinja' %}
+
+{% include '_typing_imports.py.jinja' %}
+
 # -- template partials.py.jinja --
+
 from . import types, fields, enums, actions, models, bases
 from ._compat import model_rebuild, field_validator
 
@@ -42,6 +46,3 @@ from . import partials
 {% for partial in partial_models %}
 model_rebuild({{ partial.name }})
 {% endfor %}
-
-# fmt: on
-

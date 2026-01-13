@@ -290,8 +290,11 @@ class Generator(GenericGenerator[PythonData]):
         log.debug('Finished generating Prisma Client Python')
 
 
-def _run_ruff_if_available(rootdir: Path) -> None:
-    """Run ruff to fix linting issues if available."""
+def _run_ruff_if_available(rootdir: Path, env: Optional[Environment] = None) -> None:
+    """Run ruff to fix linting issues on all generated files."""
+    if env is None:
+        env = DEFAULT_ENV
+
     try:
         # Check if ruff is available
         result = subprocess.run(
@@ -303,25 +306,45 @@ def _run_ruff_if_available(rootdir: Path) -> None:
             log.debug('ruff not available, skipping linting fixes')
             return
 
-        # Run ruff to fix various issues in the types directory:
-        # - F401: unused imports
-        # - I001: import sorting
-        # - E501: line too long (ruff format handles this)
+        # Collect all generated Python files
+        generated_files: List[str] = []
+
+        # Add files from templates
+        for name in env.list_templates():
+            if name.endswith('.py.jinja') and not name.startswith('_'):
+                # Skip private templates in subdirectories too
+                parts = name.split('/')
+                if len(parts) > 1 and parts[-1].startswith('_'):
+                    continue
+
+                file = resolve_template_path(rootdir=rootdir, name=name)
+                if file.exists():
+                    generated_files.append(str(file))
+
+        # Add dynamically generated model type files
         types_dir = rootdir / 'types'
         if types_dir.exists():
-            # First run ruff check --fix for auto-fixable lint issues
-            subprocess.run(
-                ['ruff', 'check', '--select', 'F401,I001', '--fix', str(types_dir)],
-                capture_output=True,
-                check=False,
-            )
-            # Then run ruff format to fix line length and formatting
-            subprocess.run(
-                ['ruff', 'format', str(types_dir)],
-                capture_output=True,
-                check=False,
-            )
-            log.debug('Ran ruff to fix linting issues in %s', types_dir)
+            generated_files.append(str(types_dir))
+
+        if not generated_files:
+            log.debug('No generated files to lint')
+            return
+
+        # Run ruff check --fix for auto-fixable lint issues
+        # - F401: unused imports -> remove
+        # - I001: import sorting -> fix
+        subprocess.run(
+            ['ruff', 'check', '--select', 'F401,I001', '--fix', *generated_files],
+            capture_output=True,
+            check=False,
+        )
+        # Then run ruff format to fix line length and formatting
+        subprocess.run(
+            ['ruff', 'format', *generated_files],
+            capture_output=True,
+            check=False,
+        )
+        log.debug(f'Ran ruff to fix linting issues on {len(generated_files)} generated paths')
     except FileNotFoundError:
         log.debug('ruff not found, skipping linting fixes')
     except Exception as e:

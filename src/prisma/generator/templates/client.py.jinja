@@ -1,8 +1,11 @@
 {% set annotations = true %}
 {% include '_header.py.jinja' %}
 {% from '_utils.py.jinja' import is_async, maybe_async_def, maybe_await, maybe_async, recursive_types, active_provider with context %}
+
+{% include '_typing_imports.py.jinja' %}
+
 # -- template client.py.jinja --
-import warnings
+
 import logging
 from datetime import timedelta
 from pathlib import Path

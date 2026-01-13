@@ -1,5 +1,8 @@
 {% include '_header.py.jinja' %}
 {% from '_utils.py.jinja' import active_provider with context %}
+
+{% include '_typing_imports.py.jinja' %}
+
 # -- template types/list_filters.py.jinja --
 
 {% for type, python_type in get_list_types() %}
@@ -53,4 +56,4 @@ class _{{ type }}ListUpdatePush(TypedDict):
 {% endfor %}
 
 # we have to import these as python_type may reference 'fields.X' or 'enums.X'
-from .. import fields, enums  # noqa: TID251
+from .. import fields, enums
