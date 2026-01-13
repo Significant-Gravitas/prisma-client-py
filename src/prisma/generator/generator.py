@@ -3,8 +3,8 @@ import sys
 import json
 import shutil
 import logging
-import subprocess
 import traceback
+import subprocess
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Type, Generic, Optional, cast
 from pathlib import Path
@@ -351,13 +351,18 @@ def cleanup_templates(rootdir: Path, *, env: Optional[Environment] = None) -> No
 
 def _render_model_types(rootdir: Path, data: PythonData, params: Dict[str, Any]) -> None:
     """Render all type files in the types/ directory."""
+    # Remove stale types.py file if it exists
+    types_py = rootdir / 'types.py'
+    if types_py.exists():
+        types_py.unlink()
+        log.debug(f'Removed legacy types.py file at {types_py}')
+
     types_dir = rootdir / 'types'
 
-    # Remove any existing types/ directory before generating
-    # This prevents stale files from a previous schema from persisting
+    # Remove any existing (possibly stale) types/ directory before generating
     if types_dir.exists():
         shutil.rmtree(types_dir)
-        log.debug('Removed existing types directory at %s', types_dir)
+        log.debug(f'Removed existing types directory at {types_dir}')
 
     types_dir.mkdir(parents=True, exist_ok=True)
 

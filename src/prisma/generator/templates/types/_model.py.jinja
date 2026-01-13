@@ -8,10 +8,11 @@ from .filters import *  # noqa: TID251
 from .atomic import *  # noqa: TID251
 from .list_filters import *  # noqa: TID251
 
+{% set other_models = all_models | selectattr('name', 'ne', model.name) | list %}
+{% if other_models %}
 # Cross-import related model types for type checker resolution
 if TYPE_CHECKING:
-{% for other_model in all_models %}
-{% if other_model.name != model.name %}
+{% for other_model in other_models %}
     from .{{ other_model.name | lower }} import (  # noqa: TID251
         {{ other_model.name }}WhereInput,
         {{ other_model.name }}WhereUniqueInput,
@@ -26,8 +27,8 @@ if TYPE_CHECKING:
         {{ other_model.name }}UpdateManyWithoutRelationsInput,
         {{ other_model.name }}ConnectOrCreateWithoutRelationsInput,
     )
-{% endif %}
 {% endfor %}
+{% endif %}
 
 
 {% set depth = generator.config.recursive_type_depth %}
