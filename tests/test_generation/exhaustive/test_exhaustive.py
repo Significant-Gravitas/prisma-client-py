@@ -35,18 +35,6 @@ class OSAgnosticSingleFileExtension(SingleFileSnapshotExtension):
         serialized = AmberDataSerializer.serialize(data, exclude=exclude, include=include, matcher=matcher)
         return bytes(serialized, 'utf-8')
 
-    # we disable diffs as we don't really care what the diff is
-    # we just care that there is a diff and it can take a very
-    # long time for syrupy to calculate the diff
-    # https://github.com/tophat/syrupy/issues/581
-    @override
-    def diff_snapshots(self, serialized_data: Any, snapshot_data: Any) -> str:
-        return 'diff-is-disabled'  # pragma: no cover
-
-    @override
-    def diff_lines(self, serialized_data: Any, snapshot_data: Any) -> Iterator[str]:
-        yield 'diff-is-disabled'  # pragma: no cover
-
 
 @pytest.fixture
 def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
