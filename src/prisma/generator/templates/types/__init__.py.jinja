@@ -4,15 +4,7 @@
 # -- template types/__init__.py.jinja --
 
 from typing import TYPE_CHECKING, Any
-
-{% from '_utils.py.jinja' import recursive_types with context %}
-{% if recursive_types %}
 from typing_extensions import LiteralString  # noqa: F401
-{% else %}
-from typing import TypeAlias
-
-LiteralString: TypeAlias = str
-{% endif %}
 
 # List of submodules for validator forward reference resolution
 _SUBMODULES = ['atomic', 'filters', 'list_filters'{% for model in dmmf.datamodel.models %}, '{{ model.name | lower }}'{% endfor %}]

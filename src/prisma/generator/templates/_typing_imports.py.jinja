@@ -34,12 +34,6 @@ from builtins import int as _int
 from builtins import str as _str
 from builtins import bool as _bool
 from builtins import float as _float
+from typing_extensions import LiteralString
 
 {% from '_utils.py.jinja' import recursive_types with context %}
-
-{% if recursive_types %}
-from typing_extensions import LiteralString
-{% else %}
-from typing import TypeAlias
-LiteralString: TypeAlias = str
-{% endif %}
