@@ -86,7 +86,7 @@ TEMPLATE_FILES = [
     'schema.prisma',
 ]
 THIS_DIR = Path(__file__).parent
-BINARY_PATH_RE = re.compile(r'BINARY_PATHS = (.*)')
+BINARY_PATH_RE = re.compile(r'BINARY_PATHS = ([\s\S]*?[}\n]\))')
 
 
 def path_replacer(
@@ -107,13 +107,6 @@ def path_replacer(
 
 
 # TODO: support running snapshot tests on windows
-
-
-def get_all_generated_files(output_dir: Path) -> List[str]:
-    """Get all files to test including dynamically generated type files"""
-    files = list(TEMPLATE_FILES)  # Copy the static list
-    files.extend(get_generated_type_files(output_dir))
-    return files
 
 
 @skipif_windows

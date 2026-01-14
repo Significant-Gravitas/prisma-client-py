@@ -61,21 +61,10 @@ __all__ = (
 
 log: logging.Logger = logging.getLogger(__name__)
 
-SCHEMA_PATH = Path('<absolute-schema-path>')
+SCHEMA_PATH = Path('<absolute-schema-path>')  # fmt: skip
 PACKAGED_SCHEMA_PATH = Path(__file__).parent.joinpath('schema.prisma')
 ENGINE_TYPE: EngineType = EngineType.binary
 BINARY_PATHS = '<binary-paths-removed>'
-    BinaryPaths,
-    {
-        'queryEngine': {
-            'debian-openssl-3.0.x': '/home/reinier/.cache/prisma-python/binaries/5.19.0/5fe21811a6ba0b952a3bc71400666511fe3b902f/node_modules/prisma/query-engine-debian-openssl-3.0.x'
-        },
-        'introspectionEngine': {},
-        'migrationEngine': {},
-        'libqueryEngine': {},
-        'prismaFmt': {},
-    },
-)
 
 
 class Prisma(SyncBasePrisma):
