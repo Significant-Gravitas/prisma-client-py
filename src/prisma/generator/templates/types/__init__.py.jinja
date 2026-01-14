@@ -29,11 +29,3 @@ else:
             if hasattr(module, name):
                 return getattr(module, name)
         raise AttributeError(f"module 'prisma.types' has no attribute {name!r}")
-
-    def __dict__():
-        return {
-            name
-            for module_name in _SUBMODULES
-            for name in dir(importlib.import_module(f'.{module_name}', __package__))
-            if not name.startswith('_')
-        }
