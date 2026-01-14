@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 import sys
 import subprocess
-from typing import Any, List, Callable, Iterator, Optional
+from typing import Any, List, Callable, Optional
 from pathlib import Path
 from typing_extensions import override
 
