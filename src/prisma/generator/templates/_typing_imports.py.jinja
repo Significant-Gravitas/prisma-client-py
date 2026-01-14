@@ -1,0 +1,39 @@
+{% if annotations is defined and annotations %}
+from __future__ import annotations
+{% else %}
+{% endif %}
+
+import sys
+import decimal
+import datetime
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    Dict,
+    Generic,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    Mapping,
+    NoReturn,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    TYPE_CHECKING,
+    Type,
+    TypedDict,
+    TypeVar,
+    Union,
+    cast,
+    overload,
+)
+from builtins import int as _int
+from builtins import str as _str
+from builtins import bool as _bool
+from builtins import float as _float
+from typing_extensions import LiteralString
+
+{% from '_utils.py.jinja' import recursive_types with context %}

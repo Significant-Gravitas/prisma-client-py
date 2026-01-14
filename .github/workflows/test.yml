@@ -74,6 +74,7 @@ jobs:
           python scripts/ci.py -s test --no-error-on-missing-interpreters -- --pydantic-v2=${{ matrix.pydantic-v2 || 'true' }}
         env:
           TARGET_PYTHON: ${{ matrix.python-version }}
+          ENABLE_SNAPSHOT_DIFF: ${{ runner.debug }}
 
       - name: Upload coverage
         uses: actions/upload-artifact@v6

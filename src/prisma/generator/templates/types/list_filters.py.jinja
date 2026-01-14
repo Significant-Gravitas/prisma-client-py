@@ -1,0 +1,59 @@
+{% include '_header.py.jinja' %}
+{% from '_utils.py.jinja' import active_provider with context %}
+
+{% include '_typing_imports.py.jinja' %}
+
+# -- template types/list_filters.py.jinja --
+
+{% for type, python_type in get_list_types() %}
+class _{{ type }}ListFilterEqualsInput(TypedDict):
+    equals: Optional[List[{{ python_type }}]]
+
+
+class _{{ type }}ListFilterHasInput(TypedDict):
+    has: {{ python_type }}
+
+
+class _{{ type }}ListFilterHasEveryInput(TypedDict):
+    has_every: List[{{ python_type }}]
+
+
+class _{{ type }}ListFilterHasSomeInput(TypedDict):
+    has_some: List[{{ python_type }}]
+
+
+class _{{ type }}ListFilterIsEmptyInput(TypedDict):
+    is_empty: bool
+
+
+{{ type }}ListFilter = Union[
+    _{{ type }}ListFilterHasInput,
+    _{{ type }}ListFilterEqualsInput,
+    _{{ type }}ListFilterHasSomeInput,
+    _{{ type }}ListFilterIsEmptyInput,
+    _{{ type }}ListFilterHasEveryInput,
+]
+
+
+class _{{ type }}ListUpdateSet(TypedDict):
+    set: List[{{ python_type }}]
+
+
+{% if active_provider != 'cockroachdb' %}
+class _{{ type }}ListUpdatePush(TypedDict):
+    push: List[{{ python_type }}]
+{% endif %}
+
+
+{{ type }}ListUpdate = Union[
+    List[{{ python_type }}],
+    _{{ type }}ListUpdateSet,
+    {% if active_provider != 'cockroachdb' %}
+    _{{ type }}ListUpdatePush,
+    {% endif %}
+]
+
+{% endfor %}
+
+# we have to import these as python_type may reference 'fields.X' or 'enums.X'
+from .. import fields, enums

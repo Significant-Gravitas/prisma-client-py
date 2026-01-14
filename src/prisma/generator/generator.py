@@ -1,8 +1,10 @@
 import os
 import sys
 import json
+import shutil
 import logging
 import traceback
+import subprocess
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Type, Generic, Optional, cast
 from pathlib import Path
@@ -44,6 +46,16 @@ GENERIC_GENERATOR_NAME = 'prisma.generator.generator.GenericGenerator'
 
 # set of templates that should be rendered after every other template
 DEFERRED_TEMPLATES = {'partials.py.jinja'}
+
+# templates that require special handling (not rendered in the normal loop)
+# All types/ templates are handled by _render_model_types to ensure proper cleanup
+SPECIAL_TEMPLATES = {
+    'types/_model.py.jinja',
+    'types/__init__.py.jinja',
+    'types/filters.py.jinja',
+    'types/atomic.py.jinja',
+    'types/list_filters.py.jinja',
+}
 
 DEFAULT_ENV = Environment(
     trim_blocks=True,
@@ -247,7 +259,19 @@ class Generator(GenericGenerator[PythonData]):
                 if not name.endswith('.py.jinja') or name.startswith('_') or name in DEFERRED_TEMPLATES:
                     continue
 
+                # Skip templates that require special handling
+                if name in SPECIAL_TEMPLATES:
+                    continue
+
+                # Skip templates in subdirectories that start with _ (e.g., types/_model.py.jinja)
+                parts = name.split('/')
+                if len(parts) > 1 and parts[-1].startswith('_'):
+                    continue
+
                 render_template(rootdir, name, params)
+
+            # Generate per-model type files
+            _render_model_types(rootdir, data, params)
 
             if config.partial_type_generator:
                 log.debug('Generating partial types')
@@ -260,7 +284,71 @@ class Generator(GenericGenerator[PythonData]):
             cleanup_templates(rootdir, env=DEFAULT_ENV)
             raise
 
+        # Optionally run ruff to clean up unused imports
+        _run_ruff_if_available(rootdir)
+
         log.debug('Finished generating Prisma Client Python')
+
+
+def _run_ruff_if_available(rootdir: Path, env: Optional[Environment] = None) -> None:
+    """Run ruff to fix linting issues on all generated files."""
+    if env is None:
+        env = DEFAULT_ENV
+
+    try:
+        # Check if ruff is available
+        result = subprocess.run(
+            ['ruff', '--version'],
+            capture_output=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            log.debug('ruff not available, skipping linting fixes')
+            return
+
+        # Collect all generated Python files
+        generated_files: List[str] = []
+
+        # Add files from templates
+        for name in env.list_templates():
+            if name.endswith('.py.jinja') and not name.startswith('_'):
+                # Skip private templates in subdirectories too
+                parts = name.split('/')
+                if len(parts) > 1 and parts[-1].startswith('_'):
+                    continue
+
+                file = resolve_template_path(rootdir=rootdir, name=name)
+                if file.exists():
+                    generated_files.append(str(file))
+
+        # Add dynamically generated model type files
+        types_dir = rootdir / 'types'
+        if types_dir.exists():
+            generated_files.append(str(types_dir))
+
+        if not generated_files:
+            log.debug('No generated files to lint')
+            return
+
+        # Run ruff check --fix for auto-fixable lint issues
+        # - F401: unused imports -> remove
+        # - I001: import sorting -> fix
+        subprocess.run(
+            ['ruff', 'check', '--select', 'F401,I001', '--fix', *generated_files],
+            capture_output=True,
+            check=False,
+        )
+        # Then run ruff format to fix line length and formatting
+        subprocess.run(
+            ['ruff', 'format', *generated_files],
+            capture_output=True,
+            check=False,
+        )
+        log.debug(f'Ran ruff to fix linting issues on {len(generated_files)} generated paths')
+    except FileNotFoundError:
+        log.debug('ruff not found, skipping linting fixes')
+    except Exception as e:
+        log.debug('Failed to run ruff: %s', e)
 
 
 def cleanup_templates(rootdir: Path, *, env: Optional[Environment] = None) -> None:
@@ -273,6 +361,61 @@ def cleanup_templates(rootdir: Path, *, env: Optional[Environment] = None) -> No
         if file.exists():
             log.debug('Removing rendered template at %s', file)
             file.unlink()
+
+    # Also clean up dynamically generated model type files
+    types_dir = rootdir / 'types'
+    if types_dir.exists():
+        for file in types_dir.glob('*.py'):
+            # Don't remove __init__.py as it's generated from a template
+            if file.name != '__init__.py':
+                log.debug('Removing generated model types at %s', file)
+                file.unlink()
+
+
+def _render_model_types(rootdir: Path, data: PythonData, params: Dict[str, Any]) -> None:
+    """Render all type files in the types/ directory."""
+    # Remove stale types.py file if it exists
+    types_py = rootdir / 'types.py'
+    if types_py.exists():
+        types_py.unlink()
+        log.debug(f'Removed legacy types.py file at {types_py}')
+
+    types_dir = rootdir / 'types'
+
+    # Remove any existing (possibly stale) types/ directory before generating
+    if types_dir.exists():
+        shutil.rmtree(types_dir)
+        log.debug(f'Removed existing types directory at {types_dir}')
+
+    types_dir.mkdir(parents=True, exist_ok=True)
+
+    # Render static type templates (filters, atomic, list_filters)
+    for template_name in ('types/filters.py.jinja', 'types/atomic.py.jinja', 'types/list_filters.py.jinja'):
+        render_template(rootdir, template_name, params)
+
+    # Get the model template
+    model_template = DEFAULT_ENV.get_template('types/_model.py.jinja')
+
+    # Get all models for cross-references
+    all_models = data.dmmf.datamodel.models
+
+    # Render a file for each model
+    for model in all_models:
+        model_schema = params['type_schema'].get_model(model.name)
+        model_params = {
+            **params,
+            'model': model,
+            'model_schema': model_schema,
+            'all_models': all_models,
+        }
+
+        output = model_template.render(**model_params)
+        file = types_dir / f'{model.name.lower()}.py'
+        file.write_bytes(output.encode(sys.getdefaultencoding()))
+        log.debug('Rendered model types to %s', file.absolute())
+
+    # Render the types/__init__.py.jinja template
+    render_template(rootdir, 'types/__init__.py.jinja', params)
 
 
 def render_template(

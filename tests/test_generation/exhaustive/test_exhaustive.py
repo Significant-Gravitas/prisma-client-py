@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 import sys
 import subprocess
-from typing import Any, List, Callable, Iterator, Optional
+from typing import Any, List, Callable, Optional
 from pathlib import Path
 from typing_extensions import override
 
@@ -35,18 +35,6 @@ class OSAgnosticSingleFileExtension(SingleFileSnapshotExtension):
         serialized = AmberDataSerializer.serialize(data, exclude=exclude, include=include, matcher=matcher)
         return bytes(serialized, 'utf-8')
 
-    # we disable diffs as we don't really care what the diff is
-    # we just care that there is a diff and it can take a very
-    # long time for syrupy to calculate the diff
-    # https://github.com/tophat/syrupy/issues/581
-    @override
-    def diff_snapshots(self, serialized_data: Any, snapshot_data: Any) -> str:
-        return 'diff-is-disabled'  # pragma: no cover
-
-    @override
-    def diff_lines(self, serialized_data: Any, snapshot_data: Any) -> Iterator[str]:
-        yield 'diff-is-disabled'  # pragma: no cover
-
 
 @pytest.fixture
 def snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
@@ -58,7 +46,7 @@ def _clean_line(proc: 'subprocess.CompletedProcess[bytes]') -> str:
 
 
 def get_files_from_templates(directory: Path) -> List[str]:
-    """Return a list of all auto-generated python modules"""
+    """Return a list of all auto-generated python modules from templates"""
     files: List[str] = []
 
     for template in directory.iterdir():
@@ -75,14 +63,28 @@ def get_files_from_templates(directory: Path) -> List[str]:
     return files
 
 
+def get_generated_type_files(output_dir: Path) -> List[str]:
+    """Return a list of dynamically generated type files from the types/ directory"""
+    types_dir = output_dir / 'types'
+    if not types_dir.exists():
+        return []  # pragma: no cover
+
+    files: List[str] = []
+    for file in types_dir.iterdir():
+        if file.is_file() and file.suffix == '.py' and not file.name.startswith('_'):
+            files.append(f'types/{file.name}')
+    return sorted(files)
+
+
 SYNC_ROOTDIR = ROOTDIR / '__prisma_sync_output__' / 'prisma'
 ASYNC_ROOTDIR = ROOTDIR / '__prisma_async_output__' / 'prisma'
-FILES = [
+# Static files from templates
+TEMPLATE_FILES = [
     *get_files_from_templates(BASE_PACKAGE_DIR / 'generator' / 'templates'),
     'schema.prisma',
 ]
 THIS_DIR = Path(__file__).parent
-BINARY_PATH_RE = re.compile(r'BINARY_PATHS = (.*)')
+BINARY_PATH_RE = re.compile(r'BINARY_PATHS = ([\s\S]*?[}\n]\))')
 
 
 def path_replacer(
@@ -106,21 +108,43 @@ def path_replacer(
 
 
 @skipif_windows
-@pytest.mark.parametrize('file', FILES)
+@pytest.mark.parametrize('file', TEMPLATE_FILES)
 def test_sync(snapshot: SnapshotAssertion, file: str) -> None:
-    """Ensure synchronous client files match"""
+    """Ensure synchronous client files from templates match"""
     assert SYNC_ROOTDIR.joinpath(file).absolute().read_text() == snapshot(
         matcher=path_replacer(THIS_DIR / 'sync.schema.prisma')  # type: ignore
     )
 
 
 @skipif_windows
-@pytest.mark.parametrize('file', FILES)
+@pytest.mark.parametrize('file', TEMPLATE_FILES)
 def test_async(snapshot: SnapshotAssertion, file: str) -> None:
-    """Ensure asynchronous client files match"""
+    """Ensure asynchronous client files from templates match"""
     assert ASYNC_ROOTDIR.joinpath(file).absolute().read_text() == snapshot(
         matcher=path_replacer(THIS_DIR / 'async.schema.prisma')  # type: ignore
     )
+
+
+@skipif_windows
+def test_sync_model_types(snapshot: SnapshotAssertion) -> None:
+    """Ensure synchronous client dynamically generated model type files match"""
+    model_files = get_generated_type_files(SYNC_ROOTDIR)
+    for file in model_files:
+        assert SYNC_ROOTDIR.joinpath(file).absolute().read_text() == snapshot(
+            name=f'test_sync[{file}]',
+            matcher=path_replacer(THIS_DIR / 'sync.schema.prisma'),  # type: ignore
+        )
+
+
+@skipif_windows
+def test_async_model_types(snapshot: SnapshotAssertion) -> None:
+    """Ensure asynchronous client dynamically generated model type files match"""
+    model_files = get_generated_type_files(ASYNC_ROOTDIR)
+    for file in model_files:
+        assert ASYNC_ROOTDIR.joinpath(file).absolute().read_text() == snapshot(
+            name=f'test_async[{file}]',
+            matcher=path_replacer(THIS_DIR / 'async.schema.prisma'),  # type: ignore
+        )
 
 
 def test_sync_client_can_be_imported() -> None:

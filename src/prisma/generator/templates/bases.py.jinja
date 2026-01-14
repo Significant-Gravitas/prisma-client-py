@@ -1,6 +1,10 @@
 {% include '_header.py.jinja' %}
 {% from '_utils.py.jinja' import recursive_types with context %}
+
+{% include '_typing_imports.py.jinja' %}
+
 # -- template models.py.jinja --
+
 from pydantic import BaseModel
 
 from . import fields, actions
