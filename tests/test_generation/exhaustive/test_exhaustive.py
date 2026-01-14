@@ -67,14 +67,12 @@ def get_generated_type_files(output_dir: Path) -> List[str]:
     """Return a list of dynamically generated type files from the types/ directory"""
     types_dir = output_dir / 'types'
     if not types_dir.exists():
-        return []
+        return []  # pragma: no cover
 
     files: List[str] = []
     for file in types_dir.iterdir():
         if file.is_file() and file.suffix == '.py' and not file.name.startswith('_'):
-            # Include files like user.py, post.py but not __init__.py (already from template)
-            if file.name != '__init__.py':
-                files.append(f'types/{file.name}')
+            files.append(f'types/{file.name}')
     return sorted(files)
 
 
